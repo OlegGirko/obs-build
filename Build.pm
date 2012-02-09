@@ -180,6 +180,7 @@ sub read_config {
   $config->{'vminstall'} = [];
   $config->{'cbpreinstall'} = [];
   $config->{'cbinstall'} = [];
+  $config->{'sb2install'} = [];
   $config->{'runscripts'} = [];
   $config->{'required'} = [];
   $config->{'support'} = [];
@@ -190,6 +191,7 @@ sub read_config {
   $config->{'substitute'} = {};
   $config->{'substitute_vers'} = {};
   $config->{'optflags'} = {};
+  $config->{'sb2flags'} = {};
   $config->{'order'} = {};
   $config->{'exportfilter'} = {};
   $config->{'publishfilter'} = [];
@@ -214,7 +216,7 @@ sub read_config {
       }
       next;
     }
-    if ($l0 eq 'preinstall:' || $l0 eq 'vminstall:' || $l0 eq 'cbpreinstall:' || $l0 eq 'cbinstall:' || $l0 eq 'required:' || $l0 eq 'support:' || $l0 eq 'keep:' || $l0 eq 'prefer:' || $l0 eq 'ignore:' || $l0 eq 'conflict:' || $l0 eq 'runscripts:') {
+    if ($l0 eq 'preinstall:' || $l0 eq 'vminstall:' || $l0 eq 'cbpreinstall:' || $l0 eq 'cbinstall:' || $l0 eq 'sb2install:' || $l0 eq 'required:' || $l0 eq 'support:' || $l0 eq 'keep:' || $l0 eq 'prefer:' || $l0 eq 'ignore:' || $l0 eq 'conflict:' || $l0 eq 'runscripts:') {
       my $t = substr($l0, 0, -1);
       for my $l (@l) {
 	if ($l eq '!*') {
@@ -255,6 +257,10 @@ sub read_config {
       next unless @l;
       $ll = shift @l;
       $config->{'optflags'}->{$ll} = join(' ', @l);
+    } elsif ($l0 eq 'sb2flags:') {
+      next unless @l;
+      $ll = shift @l;
+      $config->{'sb2flags'}->{$ll} = join(' ', @l);
     } elsif ($l0 eq 'order:') {
       for my $l (@l) {
 	if ($l eq '!*') {
@@ -286,7 +292,7 @@ sub read_config {
       warn("unknown keyword in config: $l0\n");
     }
   }
-  for my $l (qw{preinstall vminstall cbpreinstall cbinstall required support keep runscripts repotype patterntype}) {
+  for my $l (qw{preinstall vminstall cbpreinstall cbinstall sb2install required support keep runscripts repotype patterntype}) {
     $config->{$l} = [ unify(@{$config->{$l}}) ];
   }
   for my $l (keys %{$config->{'substitute'}}) {
@@ -429,6 +435,11 @@ sub get_cbpreinstalls {
 sub get_cbinstalls {
   my ($config) = @_;
   return @{$config->{'cbinstall'}};
+}
+
+sub get_sb2installs {
+  my ($config) = @_;
+  return @{$config->{'sb2install'}};
 }
 
 sub get_runscripts {

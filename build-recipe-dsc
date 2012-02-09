@@ -42,7 +42,7 @@ recipe_prepare_dsc() {
 	for DEB_DSCFILE in $BUILD_ROOT/$DEB_SOURCEDIR/*.dsc ; do : ; done 
 	DEB_DSCFILE="${DEB_DSCFILE##*/}"
     fi
-    chroot $BUILD_ROOT su -c "dpkg-source -x $DEB_SOURCEDIR/$DEB_DSCFILE $TOPDIR/BUILD" - $BUILD_USER
+    enter_target needuser dpkg-source -x $DEB_SOURCEDIR/$DEB_DSCFILE $TOPDIR/BUILD
 }
 
 recipe_build_dsc() {
@@ -61,12 +61,15 @@ recipe_build_dsc() {
     fi
 
     if test -n "$RUN_SHELL"; then
-	chroot $BUILD_ROOT su -
+	enter_target needroot bash
     else
-	chroot $BUILD_ROOT su -c "cd $TOPDIR/BUILD && $DSC_BUILD_CMD" - $BUILD_USER < /dev/null && BUILD_SUCCEEDED=true
+	echo "#!/bin/sh" > $BUILD_ROOT/.debbuildscript
+	echo "cd $TOPDIR/BUILD && $DSC_BUILD_CMD" >> $BUILD_ROOT/.debbuildscript
+	chmod +x $BUILD_ROOT/.debbuildscript
+	enter_target needuser "/.debbuildscript" < /dev/null && BUILD_SUCCEEDED=true
 	if test "$BUILD_SUCCEEDED" = true -a "$DO_CHECKS" != "false"; then
 	   DEB_CHANGESFILE=${RECIPEFILE%.dsc}_"$(chroot $BUILD_ROOT su -c 'dpkg-architecture -qDEB_BUILD_ARCH')".changes
-	   chroot $BUILD_ROOT su -c "which lintian > /dev/null && cd $TOPDIR && echo Running lintian && (set -x && lintian -i $DEB_SOURCEDIR/$DEB_DSCFILE)" - $BUILD_USER < /dev/null
+	   enter_target needuser "which lintian > /dev/null && cd $TOPDIR && echo Running lintian && (set -x && lintian -i $DEB_SOURCEDIR/$DEB_DSCFILE)" < /dev/null
 	fi
     fi
 

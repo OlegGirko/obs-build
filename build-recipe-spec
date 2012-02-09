@@ -22,7 +22,7 @@
 ################################################################
 
 recipe_setup_spec() {
-    TOPDIR=`chroot $BUILD_ROOT su -c "rpm --eval '%_topdir'" - $BUILD_USER`
+    TOPDIR=`enter_target needuser rpm --eval '%_topdir'`
     if test -z "$TOPDIR"; then
 	echo "Error: TOPDIR empty"
 	cleanup_and_exit 1
@@ -45,17 +45,17 @@ recipe_prepare_spec() {
     # fixup specfile
     CHANGELOGARGS=
     test -n "$CHANGELOG" -a -f "$BUILD_ROOT/.build-changelog" && CHANGELOGARGS="--changelog $BUILD_ROOT/.build-changelog"
-    substitutedeps "${args[@]}" --root "$BUILD_ROOT" --dist "$BUILD_DIST" --archpath "$BUILD_ARCH" --configdir "$CONFIG_DIR" $CHANGELOGARGS "$BUILD_ROOT$TOPDIR/SOURCES/$RECIPEFILE" "$BUILD_ROOT/.spec.new" || cleanup_and_exit 1
+    substitutedeps "${args[@]}" --root "$BUILD_ROOT" --dist "$BUILD_DIST" --archpath "$BUILD_ARCH" --configdir "$CONFIG_DIR" $CHANGELOGARGS "$BUILD_ROOT$TOPDIR/SOURCES/$RECIPEFILE" "$BUILD_TARGET/.spec.new" || cleanup_and_exit 1
 
     # fix rpmrc if we are compiling for i686
-    test -f $BUILD_ROOT/usr/lib/rpm/rpmrc_i586 && mv $BUILD_ROOT/usr/lib/rpm/rpmrc_i586 $BUILD_ROOT/usr/lib/rpm/rpmrc
-    if test -e $BUILD_ROOT/usr/lib/rpm/rpmrc -a "$BUILD_ARCH" != "${BUILD_ARCH#i686}" ; then
-	mv $BUILD_ROOT/usr/lib/rpm/rpmrc $BUILD_ROOT/usr/lib/rpm/rpmrc_i586
-	sed -e 's/^buildarchtranslate: athlon.*/buildarchtranslate: athlon: i686/' -e 's/^buildarchtranslate: i686.*/buildarchtranslate: i686: i686/' < $BUILD_ROOT/usr/lib/rpm/rpmrc_i586 > $BUILD_ROOT/usr/lib/rpm/rpmrc
+    test -f $BUILD_TARGET/usr/lib/rpm/rpmrc_i586 && mv $BUILD_TARGET/usr/lib/rpm/rpmrc_i586 $BUILD_TARGET/usr/lib/rpm/rpmrc
+    if test -e $BUILD_TARGET/usr/lib/rpm/rpmrc -a "$BUILD_ARCH" != "${BUILD_ARCH#i686}" ; then
+	mv $BUILD_TARGET/usr/lib/rpm/rpmrc $BUILD_TARGET/usr/lib/rpm/rpmrc_i586
+	sed -e 's/^buildarchtranslate: athlon.*/buildarchtranslate: athlon: i686/' -e 's/^buildarchtranslate: i686.*/buildarchtranslate: i686: i686/' < $BUILD_TARGET/usr/lib/rpm/rpmrc_i586 > $BUILD_TARGET/usr/lib/rpm/rpmrc
     fi
 
     # extract macros from configuration
-    queryconfig rawmacros --dist "$BUILD_DIST" --archpath "$BUILD_ARCH" --configdir "$CONFIG_DIR" > $BUILD_ROOT/root/.rpmmacros
+    queryconfig rawmacros --dist "$BUILD_DIST" --archpath "$BUILD_ARCH" --configdir "$CONFIG_DIR" > $BUILD_TARGET/root/.rpmmacros
     if test -n "$BUILD_DEBUG" ; then
 	echo '
 %prep %{?!__debug_package:%{?_build_create_debug:%?_build_insert_debug_package}}%%prep
@@ -65,20 +65,20 @@ recipe_prepare_spec() {
 %undefine _enable_debug_packages \
 %debug_package
 
-' >> $BUILD_ROOT/root/.rpmmacros
+' >> $BUILD_TARGET/root/.rpmmacros
     fi
 
     if test -n "$BUILD_JOBS" ; then
-	cat >> $BUILD_ROOT/root/.rpmmacros <<-EOF
+	cat >> $BUILD_TARGET/root/.rpmmacros <<-EOF
 		%jobs $BUILD_JOBS
 		%_smp_mflags -j$BUILD_JOBS
 		EOF
     fi
-    test $BUILD_USER = abuild && cp -p $BUILD_ROOT/root/.rpmmacros $BUILD_ROOT/home/abuild/.rpmmacros
+    test $BUILD_USER = abuild && cp -p $BUILD_TARGET/root/.rpmmacros $BUILD_ROOT/home/abuild/.rpmmacros
 
     # extract optflags from configuration
-    queryconfig --dist "$BUILD_DIST" --configdir "$CONFIG_DIR" --archpath "$BUILD_ARCH" optflags ${BUILD_DEBUG:+debug} > $BUILD_ROOT/root/.rpmrc
-    test $BUILD_USER = abuild && cp -p $BUILD_ROOT/root/.rpmrc $BUILD_ROOT/home/abuild/.rpmrc
+    queryconfig --dist "$BUILD_DIST" --configdir "$CONFIG_DIR" --archpath "$BUILD_ARCH" optflags ${BUILD_DEBUG:+debug} > $BUILD_TARGET/root/.rpmrc
+    test $BUILD_USER = abuild && cp -p $BUILD_TARGET/root/.rpmrc $BUILD_ROOT/home/abuild/.rpmrc
 
     if test -z "$ABUILD_TARGET"; then
 	ABUILD_TARGET=$(queryconfig target --dist "$BUILD_DIST" --configdir "$CONFIG_DIR" --archpath "$BUILD_ARCH" )
@@ -86,17 +86,17 @@ recipe_prepare_spec() {
     fi
 
     # report specfile changes
-    if test -f $BUILD_ROOT/.spec.new ; then
-	if ! cmp -s $BUILD_ROOT$TOPDIR/SOURCES/$RECIPEFILE $BUILD_ROOT/.spec.new ; then
+    if test -f $BUILD_TARGET/.spec.new ; then
+	if ! cmp -s $BUILD_ROOT$TOPDIR/SOURCES/$RECIPEFILE $BUILD_TARGET/.spec.new ; then
 	    echo -----------------------------------------------------------------
 	    echo "I have the following modifications for $RECIPEFILE:"
-	    sed -e "/^%changelog/q" $BUILD_ROOT$TOPDIR/SOURCES/$RECIPEFILE > $BUILD_ROOT/.spec.t1
-	    sed -e "/^%changelog/q" $BUILD_ROOT/.spec.new > $BUILD_ROOT/.spec.t2
-	    diff $BUILD_ROOT/.spec.t1 $BUILD_ROOT/.spec.t2
-	    rm -f $BUILD_ROOT/.spec.t1 $BUILD_ROOT/.spec.t2
-	    mv $BUILD_ROOT/.spec.new $BUILD_ROOT$TOPDIR/SOURCES/$RECIPEFILE
+	    sed -e "/^%changelog/q" $BUILD_ROOT$TOPDIR/SOURCES/$RECIPEFILE > $BUILD_TARGET/.spec.t1
+	    sed -e "/^%changelog/q" $BUILD_ROOT/.spec.new > $BUILD_TARGET/.spec.t2
+	    diff $BUILD_TARGET/.spec.t1 $BUILD_TARGET/.spec.t2
+	    rm -f $BUILD_TARGET/.spec.t1 $BUILD_TARGET/.spec.t2
+	    mv $BUILD_TARGET/.spec.new $BUILD_ROOT$TOPDIR/SOURCES/$RECIPEFILE
 	else
-	    rm -f $BUILD_ROOT/.spec.new
+	    rm -f $BUILD_TARGET/.spec.new
 	fi
     fi
 }
@@ -143,13 +143,13 @@ recipe_build_spec() {
 	    "${definesnstuff[@]}" \
 	    "${rpmbopts[@]}" \
 	    "$TOPDIR/SOURCES/$RECIPEFILE" \
-	    > $BUILD_ROOT/.build.command
-    chmod 755 $BUILD_ROOT/.build.command
+	    > $BUILD_TARGET/.build.command
+    chmod 755 $BUILD_TARGET/.build.command
     check_exit
     if test -n "$RUN_SHELL"; then
-	chroot $BUILD_ROOT su -
+	enter_target needroot bash
     else
-	chroot $BUILD_ROOT su -c /.build.command - $BUILD_USER < /dev/null && BUILD_SUCCEEDED=true
+	enter_target needuser /.build.command < /dev/null && BUILD_SUCCEEDED=true
     fi
 }
 
@@ -188,7 +188,7 @@ recipe_check_file_owners() {
 }
 
 recipe_run_rpmlint() {
-    if ! test -x "$BUILD_ROOT/opt/testing/bin/rpmlint" ; then 
+    if ! test -x "$BUILD_TARGET/opt/testing/bin/rpmlint" ; then
 	return
     fi
     LINT_RPM_FILE_LIST=($(find $BUILD_ROOT/$TOPDIR/RPMS \
@@ -204,7 +204,7 @@ recipe_run_rpmlint() {
     rm -f "$BUILD_ROOT$rpmlint_logfile"
     ret=0
     mount -n -tproc none $BUILD_ROOT/proc 2> /dev/null
-    chroot $BUILD_ROOT su -s /opt/testing/bin/rpmlint "$BUILD_USER" -- \
+    enter_target needscript /opt/testing/bin/rpmlint \
 	    --info ${LINT_RPM_FILE_LIST[*]#$BUILD_ROOT} \
 	    ${SRPM_FILE_LIST[*]#$BUILD_ROOT} > "$BUILD_ROOT$rpmlint_logfile" || ret=1
     cat "$BUILD_ROOT$rpmlint_logfile"
@@ -216,11 +216,11 @@ recipe_run_rpmlint() {
 }
 
 recipe_compare_oldpackages() {
-    if test -x "$BUILD_ROOT/usr/lib/build/same-build-result.sh" ; then 
+    if test -x "$BUILD_TARGET/usr/lib/build/same-build-result.sh" ; then
 	echo "... comparing built packages with the former built"
 	mount -n -tproc none $BUILD_ROOT/proc 2> /dev/null
-	if chroot $BUILD_ROOT /usr/lib/build/same-build-result.sh /.build.oldpackages "$TOPDIR/RPMS" "$TOPDIR/SRPMS"; then 
-	    chroot $BUILD_ROOT touch /.build/.same_result_marker
+	if enter_target needroot /usr/lib/build/same-build-result.sh /.build.oldpackages "$TOPDIR/RPMS" "$TOPDIR/SRPMS"; then
+	    touch $BUILD_ROOT/.build/.same_result_marker
 	    # XXX: dirty build service hack. fix bs_worker. Search for
 	    # 'same_result_marker' for traces of a first try to get rid of this
 	    if test -n "$REASON" -a -n "$DISTURL" ; then 
@@ -232,9 +232,9 @@ recipe_compare_oldpackages() {
 }
 
 recipe_create_deltarpms() {
-    if test -x "$BUILD_ROOT/usr/bin/makedeltarpm" -a -x $BUILD_ROOT/usr/lib/build/mkdrpms ; then
+    if test -x "$BUILD_TARGET/usr/bin/makedeltarpm" -a -x $BUILD_TARGET/usr/lib/build/mkdrpms ; then
 	echo "... creating delta rpms"
 	ds=("$BUILD_ROOT/$TOPDIR"/RPMS/* "$BUILD_ROOT$TOPDIR/SRPMS")
-	chroot $BUILD_ROOT /usr/lib/build/mkdrpms /.build.oldpackages "${ds[@]#$BUILD_ROOT}"
+	enter_target needroot /usr/lib/build/mkdrpms /.build.oldpackages "${ds[@]#$BUILD_ROOT}"
     fi
 }

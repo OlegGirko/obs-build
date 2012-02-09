@@ -66,7 +66,7 @@ recipe_prepare_dsc() {
 	for DEB_DSCFILE in $BUILD_ROOT/$DEB_SOURCEDIR/*.dsc ; do : ; done 
 	DEB_DSCFILE="${DEB_DSCFILE##*/}"
     fi
-    chroot $BUILD_ROOT su -c "dpkg-source -x $DEB_SOURCEDIR/$DEB_DSCFILE $TOPDIR/BUILD" - $BUILD_USER
+    enter_target needuser dpkg-source -x $DEB_SOURCEDIR/$DEB_DSCFILE $TOPDIR/BUILD
 }
 
 dsc_build() {
@@ -112,7 +112,7 @@ dsc_move_build_result() {
 
 
 recipe_build_dsc() {
-    dsc_build "$BUILD_ROOT"
+    dsc_build "$BUILD_TARGET"
     dsc_move_build_result
 }
 

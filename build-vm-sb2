@@ -1,0 +1,48 @@
+#
+# SB2 specific functions
+#
+# (C) 2014 Jolla Oy
+#
+
+vm_verify_options_sb2() {
+    VM_IMAGE=
+    VM_SWAP=
+}
+
+vm_startup_sb2() {
+    echo "rootfs / rootfs rw 0 0" > $BUILD_ROOT/etc/mtab
+    touch $BUILD_ROOT/.sb2chroot
+    chroot $BUILD_ROOT "$vm_init_script"
+    BUILDSTATUS="$?"
+    test "$BUILDSTATUS" != 255 || BUILDSTATUS=3
+    cleanup_and_exit "$BUILDSTATUS"
+}
+
+vm_kill_sb2() {
+    :
+}
+
+vm_fixup_sb2() {
+    :
+}
+
+vm_attach_root_sb2() {
+    :
+}
+
+vm_attach_swap_sb2() {
+    :
+}
+
+vm_detach_root_sb2() {
+    :
+}
+
+vm_detach_swap_sb2() {
+    :
+}
+
+vm_cleanup_sb2() {
+    :
+}
+

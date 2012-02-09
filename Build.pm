@@ -371,6 +371,7 @@ sub read_config {
   $config->{'vminstall'} = [];
   $config->{'cbpreinstall'} = [];
   $config->{'cbinstall'} = [];
+  $config->{'sb2install'} = [];
   $config->{'runscripts'} = [];
   $config->{'required'} = [];
   $config->{'support'} = [];
@@ -383,6 +384,7 @@ sub read_config {
   $config->{'substitute'} = {};
   $config->{'substitute_vers'} = {};
   $config->{'optflags'} = {};
+  $config->{'sb2flags'} = {};
   $config->{'order'} = {};
   $config->{'exportfilter'} = {};
   $config->{'publishfilter'} = [];
@@ -420,7 +422,7 @@ sub read_config {
       push @macros, "%define $l[1]" if @l == 2;
       next;
     }
-    if ($l0 eq 'preinstall:' || $l0 eq 'vminstall:' || $l0 eq 'required:' || $l0 eq 'support:' || $l0 eq 'keep:' || $l0 eq 'prefer:' || $l0 eq 'ignore:' || $l0 eq 'conflict:' || $l0 eq 'runscripts:' || $l0 eq 'expandflags:' || $l0 eq 'buildflags:' || $l0 eq 'publishflags:' || $l0 eq 'repourl:' || $l0 eq 'registryurl:' || $l0 eq 'assetsurl:' || $l0 eq 'onlynative:' || $l0 eq 'alsonative:') {
+    if ($l0 eq 'preinstall:' || $l0 eq 'vminstall:' || $l0 eq 'sb2install:' || $l0 eq 'required:' || $l0 eq 'support:' || $l0 eq 'keep:' || $l0 eq 'prefer:' || $l0 eq 'ignore:' || $l0 eq 'conflict:' || $l0 eq 'runscripts:' || $l0 eq 'expandflags:' || $l0 eq 'buildflags:' || $l0 eq 'publishflags:' || $l0 eq 'repourl:' || $l0 eq 'registryurl:' || $l0 eq 'assetsurl:' || $l0 eq 'onlynative:' || $l0 eq 'alsonative:') {
       my $t = substr($l0, 0, -1);
       for my $l (@l) {
 	if ($l eq '!*') {
@@ -461,6 +463,10 @@ sub read_config {
       next unless @l;
       $ll = shift @l;
       $config->{'optflags'}->{$ll} = join(' ', @l);
+    } elsif ($l0 eq 'sb2flags:') {
+      next unless @l;
+      $ll = shift @l;
+      $config->{'sb2flags'}->{$ll} = join(' ', @l);
     } elsif ($l0 eq 'order:') {
       for my $l (@l) {
 	if ($l eq '!*') {
@@ -508,7 +514,7 @@ sub read_config {
       warn("unknown keyword in config: $l0\n");
     }
   }
-  for my $l (qw{preinstall vminstall required support keep runscripts repotype patterntype}) {
+  for my $l (qw{preinstall vminstall sb2install required support keep runscripts repotype patterntype}) {
     $config->{$l} = [ unify(@{$config->{$l}}) ];
   }
   init_helper_hashes($config);
@@ -876,6 +882,11 @@ sub get_vminstalls {
     return ('expandpreinstalls_error') if $err;
   }
   return @{$config->{'vminstall'}};
+}
+
+sub get_sb2installs {
+  my ($config) = @_;
+  return @{$config->{'sb2install'}};
 }
 
 sub get_runscripts {

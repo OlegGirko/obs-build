@@ -72,7 +72,7 @@ EMULATOR_SCRIPT=
 # openstack specific
 VM_OPENSTACK_FLAVOR=
 
-for i in ec2 emulator kvm lxc openstack qemu uml xen zvm docker pvm nspawn; do
+for i in ec2 emulator kvm lxc openstack qemu uml xen zvm docker pvm nspawn sb2; do
     . "$BUILD_DIR/build-vm-$i"
 done
 
@@ -348,7 +348,7 @@ vm_shutdown() {
 	swapoff "$VM_SWAP" 2>/dev/null
 	echo -n "BUILDSTATUS$1" >"$VM_SWAP"
     fi
-    test "$VM_TYPE" = lxc -o "$VM_TYPE" = docker -o "$VM_TYPE" = nspawn && exit $1
+    test "$VM_TYPE" = lxc -o "$VM_TYPE" = docker -o "$VM_TYPE" = nspawn -o "$VM_TYPE" = sb2 && exit $1
 
     # Wait for logging tee to finish
     test -f "$LOGFILE.pid" && . "$LOGFILE.pid"
@@ -612,7 +612,7 @@ vm_detect_2nd_stage() {
     fi
     RUNNING_IN_VM=true
     test -e /proc/version || mount -orw -n -tproc none /proc
-    if test "$VM_TYPE" != lxc -a "$VM_TYPE" != docker -a "$VM_TYPE" != nspawn ; then
+    if test "$VM_TYPE" != lxc -a "$VM_TYPE" != docker -a "$VM_TYPE" != nspawn -a "$VM_TYPE" != sb2 ; then
 	mount -n ${VMDISK_MOUNT_OPTIONS},remount,rw /
     fi
     umount /run >/dev/null 2>&1
@@ -997,7 +997,7 @@ vm_first_stage() {
 	ppc|ppcle|s390) PERSONALITY=8 ;;	# ppc/s390 kernel never tells us if a 32bit personality is active, assume we run on 64bit
 	aarch64) test "$BUILD_ARCH" != "${BUILD_ARCH#armv[567]}" && PERSONALITY=8 ;; # workaround, to be removed
     esac
-    test "$VM_TYPE" = lxc -o "$VM_TYPE" = docker -o "$VM_TYPE" = nspawn && PERSONALITY=0
+    test "$VM_TYPE" = lxc -o "$VM_TYPE" = docker -o "$VM_TYPE" = nspawn -o "$VM_TYPE" = sb2 && PERSONALITY=0
     echo "PERSONALITY='$PERSONALITY'" >> $BUILD_ROOT/.build/build.data
     echo "VM_HOSTNAME='$HOST'" >> $BUILD_ROOT/.build/build.data
     echo -n "definesnstuff=(" >> $BUILD_ROOT/.build/build.data
@@ -1041,7 +1041,11 @@ vm_first_stage() {
 
     vm_init_script="/.build/build"
     if check_use_emulator ; then
-        vm_init_script="/.build/$INITVM_NAME"
+        if test -n "$BUILD_SB2FLAGS" -a -e "$BUILD_DIR/initscript_sb2" ; then
+            vm_init_script="/.build/initscript_sb2"
+        else
+	    vm_init_script="/.build/$INITVM_NAME"
+        fi
     fi
 
     if test -n "$VM_ROOT" ; then

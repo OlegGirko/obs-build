@@ -41,7 +41,7 @@ test -z "$BUILD_DIR" && BUILD_DIR=/usr/lib/build
 test -z "$BUILD_ROOT" && BUILD_ROOT=/var/tmp/build-root
 test -z "$CONFIG_DIR" && CONFIG_DIR="$BUILD_DIR/configs"
 
-export BUILD_ARCH BUILD_HOST_ARCH BUILD_ROOT BUILD_RPMS BUILD_DIR BUILD_DEBUG
+export BUILD_ARCH BUILD_HOST_ARCH BUILD_TARGET BUILD_ROOT BUILD_SB2FLAGS BUILD_RPMS BUILD_DIR BUILD_DEBUG
 export BUILD_DIST ABUILD_UID ABUILD_GID
 
 icecream=0
@@ -517,6 +517,7 @@ cleanup_and_exit () {
     if test -n "$RUNNING_IN_VM" ; then
 	echo "$1" >  /.build/_exitcode
 	test -n "$browner" && chown "$browner" $BUILD_ROOT
+	cleanup_sb2
 	vm_shutdown "$1"
     else
 	buildroot_umount /proc/sys/fs/binfmt_misc
@@ -683,7 +684,7 @@ setupicecream() {
 	return 0
     fi
 
-    if ! chroot "$BUILD_ROOT" rpm -q icecream >/dev/null 2>/dev/null; then
+    if ! enter_target needroot rpm -q icecream >/dev/null 2>/dev/null; then
 	echo "*** icecream package not installed ***"
 	return 1
     fi
@@ -721,7 +722,7 @@ setupicecream() {
 	    return 1
 	fi
         echo "creating new env in '$icecreamdir'"
-	chroot $BUILD_ROOT bash -c "cd $icecreamdir; $createenv" || cleanup_and_exit 1
+	enter_target needroot bash -c "cd $icecreamdir; $createenv" || cleanup_and_exit 1
 	icecc_vers=(`shopt -s nullglob; echo $BUILD_ROOT/$icecreamdir/*.tar.{bz2,gz}`)
 	icecc_vers=${icecc_vers//$BUILD_ROOT/}
 	echo "created icecream environment $icecc_vers"
@@ -771,7 +772,7 @@ create_baselibs() {
 	if test -e $BUILD_ROOT$TOPDIR/SOURCES/baselibs.conf ; then
 	    BASELIBS_CFG="-c $TOPDIR/SOURCES/baselibs.conf"
 	fi
-	if test -e $BUILD_ROOT/usr/lib/build/baselibs_global.conf; then
+	if test -e $BUILD_TARGET/usr/lib/build/baselibs_global.conf; then
 	    BASELIBS_GLOBAL="-c /usr/lib/build/baselibs_global.conf"
 	fi
 	pkgs=($RPMS)
@@ -785,7 +786,7 @@ create_baselibs() {
     # $BUILD_DIR is set to /.build when using a vm. So we need to
     # hardcode /usr/lib/build instead of $BUILD_DIR to prefer
     # mkbaselibs from the distro.
-    if test -f $BUILD_ROOT$mkbaselibs; then
+    if test -f $BUILD_TARGET$mkbaselibs; then
 	if test -z "$BASELIBS_CFG" -a -e $BUILD_ROOT/usr/lib/build/baselibs.conf ; then
 	    BASELIBS_CFG="-c /usr/lib/build/baselibs.conf"
 	fi
@@ -797,27 +798,27 @@ create_baselibs() {
 	# use external version
 	whichone=" (external)"
 	mkbaselibs="/.mkbaselibs/mkbaselibs"
-	rm -rf "$BUILD_ROOT/.mkbaselibs"
-	mkdir -p "$BUILD_ROOT/.mkbaselibs"
-	cp -f $BUILD_DIR/mkbaselibs $BUILD_ROOT/.mkbaselibs/
+	rm -rf "$BUILD_TARGET/.mkbaselibs"
+	mkdir -p "$BUILD_TARGET/.mkbaselibs"
+	cp -f $BUILD_DIR/mkbaselibs $BUILD_TARGET/.mkbaselibs/
 	if test "$BUILDTYPE" == "dsc" ; then
-	    cp -f $BUILD_DIR/baselibs_global-deb.conf $BUILD_ROOT/.mkbaselibs/baselibs_g.conf
-	    cp -f $BUILD_ROOT$TOPDIR/SOURCES/baselibs-deb.conf $BUILD_ROOT/.mkbaselibs/baselibs-deb.conf
+	    cp -f $BUILD_DIR/baselibs_global-deb.conf $BUILD_TARGET/.mkbaselibs/baselibs_g.conf
+	    cp -f $BUILD_ROOT$TOPDIR/SOURCES/baselibs-deb.conf $BUILD_TARGET/.mkbaselibs/baselibs-deb.conf
 	    BASELIBS_CFG="-c /.mkbaselibs/baselibs-deb.conf"
 	else
-	    cp -f $BUILD_DIR/baselibs_global.conf $BUILD_ROOT/.mkbaselibs/baselibs_g.conf
+	    cp -f $BUILD_DIR/baselibs_global.conf $BUILD_TARGET/.mkbaselibs/baselibs_g.conf
 	    if test -z "$BASELIBS_CFG" -a -e $BUILD_DIR/baselibs.conf; then
-		cp -f $BUILD_DIR/baselibs.conf $BUILD_ROOT/.mkbaselibs/baselibs.conf
+		cp -f $BUILD_DIR/baselibs.conf $BUILD_TARGET/.mkbaselibs/baselibs.conf
 		BASELIBS_CFG="-c /.mkbaselibs/baselibs.conf"
 	    fi
 	fi
-	if test -e $BUILD_ROOT/.mkbaselibs/baselibs_g.conf; then
+	if test -e $BUILD_TARGET/.mkbaselibs/baselibs_g.conf; then
 	    BASELIBS_GLOBAL="-c /.mkbaselibs/baselibs_g.conf"
 	fi
     fi
     echo "... creating baselibs$whichone"
     while read line; do
-	chroot $BUILD_ROOT su -c "$mkbaselibs $BASELIBS_GLOBAL $BASELIBS_CFG $line" - $BUILD_USER || cleanup_and_exit 1
+	enter_target needuser $mkbaselibs $BASELIBS_GLOBAL $BASELIBS_CFG $line || cleanup_and_exit 1
     done < <(IFS=$'\n'; echo "${pkgs[*]#$BUILD_ROOT}" | xargs -n 1024)
     rm -rf "$BUILD_ROOT/.mkbaselibs"
 }
@@ -828,11 +829,11 @@ copy_oldpackages() {
     local dest
     test -z "$RUNNING_IN_VM" || return 0
     if test -z "$old_packages" ; then
-	rm -rf "$BUILD_ROOT"/.build.oldpackages*
+	rm -rf "$BUILD_TARGET"/.build.oldpackages*
 	return 0
     fi
     for d in "${old_packages[@]}"; do
-	dest="$BUILD_ROOT/.build.oldpackages"
+	dest="$BUILD_TARGET/.build.oldpackages"
 	test "$i" = 0 || dest="$dest$i"
 	if test -d "$d" -a "$d" != "$dest" ; then
 	    rm -rf "$dest"
@@ -934,8 +935,8 @@ mkdir_build_root() {
 copy_overlay() {
     if test -d "$OVERLAY"; then
 	pushd $OVERLAY
-	echo "Copying overlay to BUILD_ROOT"
-	tar -cpf - . | (cd $BUILD_ROOT ; tar -xvf -)
+	echo "Copying overlay to BUILD_TARGET"
+	tar -cpf - . | (cd $BUILD_TARGET ; tar -xvf -)
 	popd
     else
 	echo "OVERLAY ($OVERLAY) is no directory - skipping"
@@ -945,13 +946,13 @@ copy_overlay() {
 run_rsync() {
     if test -n "$RSYNCDEST" ; then
 	if test -d "$RSYNCSRC" ; then
-	    if ! test -d "$BUILD_ROOT/$RSYNCDEST" ; then
-		echo "ATTENTION! Creating missing target directory ($BUILD_ROOT/$RSYNCDEST)."
-		mkdir -p $BUILD_ROOT/$RSYNCDEST
+	    if ! test -d "$BUILD_TARGET/$RSYNCDEST" ; then
+		echo "ATTENTION! Creating missing target directory ($BUILD_TARGET/$RSYNCDEST)."
+		mkdir -p $BUILD_TARGET/$RSYNCDEST
 	    fi
 	    echo "Running rsync ..."
-	    rsync -av $RSYNCSRC/* $BUILD_ROOT/$RSYNCDEST/
-	    chown -hR "$ABUILD_UID:$ABUILD_GID" "$BUILD_ROOT/$RSYNCDEST"
+	    rsync -av $RSYNCSRC/* $BUILD_TARGET/$RSYNCDEST/
+	    chown -hR "$ABUILD_UID:$ABUILD_GID" "$BUILD_TARGET/$RSYNCDEST"
 	    RSYNCDONE=true
 	    echo "... done"
 	else
@@ -1442,6 +1443,15 @@ if test -n "$DO_WIPE" ; then
     cleanup_and_exit
 fi
 
+set_build_arch
+
+BUILD_SB2FLAGS=`getsb2flags --dist "$BUILD_DIST" --configdir "$BUILD_DIR/configs" --archpath "$BUILD_ARCH"`
+
+if [ -n "$BUILD_SB2FLAGS" -a -z "$VM_TYPE" ]; then
+    echo "Cannot do SB2 with chroot, switching to vm type sb2"
+    VM_TYPE="sb2"
+fi
+
 if test -n "$KILL" ; then
     kill_running_build
     cleanup_and_exit
@@ -1478,7 +1488,18 @@ else
     repos=()
 fi
 
-set_build_arch
+
+BUILD_TARGET=$BUILD_ROOT
+
+if [ -n "$BUILD_SB2FLAGS" ]; then
+	echo "Will build with SB2, flags: $BUILD_SB2FLAGS"
+	echo "Switching BUILD_TARGET to $BUILD_ROOT/target"
+	if test -z "$RUNNING_IN_VM"; then
+		BUILD_TARGET=$BUILD_ROOT/target
+	else
+		BUILD_TARGET=/target
+	fi
+fi
 
 if test "$DO_INIT" = false -a -n "$RUN_SHELL" -a -z "$VM_TYPE"; then
     mount_stuff
@@ -1507,6 +1528,10 @@ if test -z "$RUNNING_IN_VM" -a -n "$VM_TYPE" -a -n "$VM_ROOT" ; then
 fi
 
 mkdir_build_root
+
+if test "$BUILD_ROOT" != "$BUILD_TARGET" ; then
+	mkdir -p "$BUILD_TARGET"
+fi
 
 if test "$BUILD_ROOT" = / ; then
     browner="$(stat -c %u /)"
@@ -1577,6 +1602,7 @@ test -z "$HOST" && HOST=`hostname`
 
 if test -z "$RUNNING_IN_VM" ; then
     echo Using BUILD_ROOT=$BUILD_ROOT
+    echo Using BUILD_TARGET=$BUILD_TARGET
     test -n "$BUILD_RPMS" && echo Using BUILD_RPMS=$BUILD_RPMS
     echo Using BUILD_ARCH=$BUILD_ARCH
     test -n "$VM_TYPE" && echo "Doing $VM_TYPE build${VM_ROOT:+ in $VM_ROOT}"
@@ -1745,8 +1771,8 @@ for RECIPEPATH in "${RECIPEFILES[@]}" ; do
     # check if we want to build with the abuild user
     #
     BUILD_USER=abuild
-    if test -x $BUILD_ROOT/bin/rpm ; then
-	SUSE_VERSION=`chroot $BUILD_ROOT /bin/rpm --eval '%{?suse_version}' 2>/dev/null`
+    if test -x $BUILD_TARGET/bin/rpm ; then
+	SUSE_VERSION=`enter_target needroot /bin/rpm --eval '%{?suse_version}' 2>/dev/null`
 	test -n "$SUSE_VERSION" -a "${SUSE_VERSION:-0}" -le 1020 && BUILD_USER=root
     fi
     if test "$BUILD_USER" = abuild ; then
@@ -1770,49 +1796,49 @@ for RECIPEPATH in "${RECIPEFILES[@]}" ; do
     if test $BUILD_USER = abuild ; then
 	# switch to gid 300 for alpine
 	test "$BUILDTYPE" = apk -a $ABUILD_GID = 399 && ABUILD_GID=300
-	if ! grep -E '^abuild:' >/dev/null <$BUILD_ROOT/etc/passwd ; then
-	    echo "abuild:x:${ABUILD_UID}:${ABUILD_GID}:Autobuild:/home/abuild:/bin/bash" >>$BUILD_ROOT/etc/passwd
-	    echo 'abuild:*:::::::' >>$BUILD_ROOT/etc/shadow # This is needed on Mandriva 2009
-	    echo 'abuild:*::' >>$BUILD_ROOT/etc/gshadow # This is needed on Ubuntu
+	if ! grep -E '^abuild:' >/dev/null <$BUILD_TARGET/etc/passwd ; then
+	    echo "abuild:x:${ABUILD_UID}:${ABUILD_GID}:Autobuild:/home/abuild:/bin/bash" >>$BUILD_TARGET/etc/passwd
+	    echo 'abuild:*:::::::' >>$BUILD_TARGET/etc/shadow # This is needed on Mandriva 2009
+	    echo 'abuild:*::' >>$BUILD_TARGET/etc/gshadow # This is needed on Ubuntu
 	    echo "abuild:x:${ABUILD_GID}:" >>$BUILD_ROOT/etc/group
-	    mkdir -p $BUILD_ROOT/home/abuild
-	    chown "$ABUILD_UID:$ABUILD_GID" $BUILD_ROOT/home/abuild
+	    mkdir -p $BUILD_TARGET/home/abuild
+	    chown "$ABUILD_UID:$ABUILD_GID" $BUILD_TARGET/home/abuild
 	else
-	    if ! grep -E "^abuild:x?:${ABUILD_UID}:${ABUILD_GID}" >/dev/null <$BUILD_ROOT/etc/passwd ; then
-		echo "abuild user present in the buildroot ($BUILD_ROOT) but uid:gid does not match"
+	    if ! grep -E "^abuild:x?:${ABUILD_UID}:${ABUILD_GID}" >/dev/null <$BUILD_TARGET/etc/passwd ; then
+		echo "abuild user present in the buildroot ($BUILD_TARGET) but uid:gid does not match"
 		echo "buildroot currently using:"
-		grep -E "^abuild:" <$BUILD_ROOT/etc/passwd
+		grep -E "^abuild:" <$BUILD_TARGET/etc/passwd
 		echo "build script attempting to use:"
 		echo "abuild::${ABUILD_UID}:${ABUILD_GID}:..."
 		echo "build aborting"
 		cleanup_and_exit 1
 	    fi
 	fi
-	if test -f $BUILD_ROOT/etc/shadow ; then
-	    sed -i -e "s@^root::@root:*:@" $BUILD_ROOT/etc/shadow
+	if test -f $BUILD_TARGET/etc/shadow ; then
+	    sed -i -e "s@^root::@root:*:@" $BUILD_TARGET/etc/shadow
 	fi
-	if test -f $BUILD_ROOT/etc/gshadow ; then
-	    sed -i -e "s@^root::@root:*:@" $BUILD_ROOT/etc/gshadow
+	if test -f $BUILD_TARGET/etc/gshadow ; then
+	    sed -i -e "s@^root::@root:*:@" $BUILD_TARGET/etc/gshadow
 	fi
 	BUILD_USER_ABUILD_USED=true
     else
 	# building as root
 	ABUILD_UID=0
 	ABUILD_GID=0
-	if grep -E '^abuild:' >/dev/null <$BUILD_ROOT/etc/passwd ; then
+	if grep -E '^abuild:' >/dev/null <$BUILD_TARGET/etc/passwd ; then
 	    rm -rf "$BUILD_ROOT/home/abuild"
-	    sed -i -e '/^abuild:/d' $BUILD_ROOT/etc/passwd
-	    sed -i -e '/^abuild:/d' $BUILD_ROOT/etc/group
-	    if test -f $BUILD_ROOT/etc/shadow ; then
-		sed -i -e '/^abuild:/d' $BUILD_ROOT/etc/shadow
+	    sed -i -e '/^abuild:/d' $BUILD_TARGET/etc/passwd
+	    sed -i -e '/^abuild:/d' $BUILD_TARGET/etc/group
+	    if test -f $BUILD_TARGET/etc/shadow ; then
+		sed -i -e '/^abuild:/d' $BUILD_TARGET/etc/shadow
 	    fi
-	    if test -f $BUILD_ROOT/etc/gshadow ; then
-		sed -i -e '/^abuild:/d' $BUILD_ROOT/etc/gshadow
+	    if test -f $BUILD_TARGET/etc/gshadow ; then
+		sed -i -e '/^abuild:/d' $BUILD_TARGET/etc/gshadow
 	    fi
 	fi
     fi
 
-    if test -n "$RUNNING_IN_VM" ; then
+    if test -n "$RUNNING_IN_VM" -a "$VM_TYPE" != "sb2" ; then
 	vm_setup_network
     fi
 
@@ -1969,7 +1995,7 @@ BUILD_SUCCEEDED=false
 TIME_POSTCHECKS=$SECONDS
 
 # RPM specific post checks are in /usr/lib/build/checks
-if test -n "$RPMS" -a -d "$BUILD_ROOT/usr/lib/build/checks" ; then
+if test -n "$RPMS" -a -d "$BUILD_TARGET/usr/lib/build/checks" ; then
     # workaround for broken 13.1 check scripts which umount /proc
     if test -n "$RUNNING_IN_VM" -a "$BUILD_ROOT" = / ; then
 	if grep 'umount proc' "$BUILD_ROOT/usr/lib/build/checks/99-check-remove-rpms" >/dev/null 2>&1 ; then
@@ -1987,19 +2013,19 @@ if test -n "$RPMS" -a -d "$BUILD_ROOT/usr/lib/build/checks" ; then
 	done
 	PNAME="${PNAME%-*-*.*.rpm}"
     fi
-    for CHECKSCRIPT in $BUILD_ROOT/usr/lib/build/checks/* ; do
+    for CHECKSCRIPT in $BUILD_TARGET/usr/lib/build/checks/* ; do
 	    echo "... running ${CHECKSCRIPT##*/}"
-	    BUILD_ROOT=/ HOME=/root chroot "$BUILD_ROOT" "/usr/lib/build/checks/${CHECKSCRIPT##*/}" || cleanup_and_exit 1
+	    BUILD_ROOT=/ HOME=/root enter_target needroot "/usr/lib/build/checks/${CHECKSCRIPT##*/}" || cleanup_and_exit 1
     done
     # workaround for broken 13.1 check scripts which umount /proc
     test -e "$BUILD_ROOT/proc/self" || mount -n -tproc none $BUILD_ROOT/proc
 fi
 
 # Generic post-build-checks are in /usr/lib/build/post-build-checks
-for CHECKSCRIPT in $BUILD_ROOT/usr/lib/build/post-build-checks/* ; do
+for CHECKSCRIPT in $BUILD_TARGET/usr/lib/build/post-build-checks/* ; do
     if test -x "$CHECKSCRIPT"; then
        echo "... running ${CHECKSCRIPT##*/}"
-       BUILD_ROOT=/ HOME=/root chroot "$BUILD_ROOT" "/usr/lib/build/post-build-checks/${CHECKSCRIPT##*/}" || cleanup_and_exit 1
+       BUILD_ROOT=/ HOME=/root enter_target needroot "/usr/lib/build/post-build-checks/${CHECKSCRIPT##*/}" || cleanup_and_exit 1
     fi
 done
 
@@ -2044,7 +2070,7 @@ exitcode=0
 
 # post build work
 # TODO: don't hardcode. instead run scripts in a directory as it's done for the checks
-if test -n "$RPMS" -a -d "$BUILD_ROOT/.build.oldpackages" ; then
+if test -n "$RPMS" -a -d "$BUILD_TARGET/.build.oldpackages" ; then
     rm -f "$BUILD_ROOT/.build/.same_result_marker"
     TIME_BUILDCMP=$SECONDS
     recipe_compare_oldpackages

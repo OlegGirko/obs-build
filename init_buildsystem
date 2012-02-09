@@ -142,7 +142,7 @@ test -z "$CACHE_DIR" && detect_cache_dir
 
 BUILD_IS_RUNNING=$BUILD_ROOT/not-ready
 TMPFILE=$BUILD_ROOT/tmpfile
-BUILD_INIT_CACHE="$BUILD_ROOT/.init_b_cache"
+BUILD_INIT_CACHE="$BUILD_TARGET/.init_b_cache"
 
 #
 # needed functions
@@ -178,6 +178,9 @@ cleanup_and_exit() {
 	fi
     fi
     test "$BUILD_ROOT" = / -a -n "$browner" && chown "$browner" "$BUILD_ROOT"
+    if [ -z "$PREPARE_VM" ]; then
+	cleanup_sb2
+    fi
     # umount so init_buildsystem can be used standalone
     umount_stuff
     # never report a fatal error when the job got killed from outside
@@ -242,7 +245,11 @@ run_cmd_with_xargs() {
 }
 
 preinstall_setup() {
-    cd "$BUILD_ROOT" || cleanup_and_exit 1
+    if test -n "$BUILD_SB2FLAGS" -a "$2" = tools ; then
+	cd "$BUILD_ROOT" || cleanup_and_exit 1
+    else
+	cd "$BUILD_TARGET" || cleanup_and_exit 1
+    fi
     rm -rf build-preinstall
     mkdir build-preinstall || cleanup_and_exit 1
     local mv_args=()
@@ -316,7 +323,7 @@ preinstall() {
 }
 
 run_pkg_scripts() {
-    chroot $BUILD_ROOT /sbin/ldconfig 2>/dev/null
+    enter_target needroot /sbin/ldconfig 2>/dev/null
     for PKG in $PACKAGES_TO_RUNSCRIPTS ; do
 	pkg_runscripts
 	check_exit
@@ -682,6 +689,7 @@ else
 	while read PKG SRC ; do
 	   test "$PKG" = "preinstall:" && continue
 	   test "$PKG" = "runscripts:" && continue
+	   test "$PKG" = "sb2install:" && continue
 	   test "$PKG" = "vminstall:" && continue
 	   test "$PKG" = "dist:" && continue
 	   test "$PKG" = "rpmid:" && continue
@@ -719,6 +727,7 @@ else
     PACKAGES_TO_SYSROOTINSTALL=
     PREINSTALL_IMAGE=
     PREINSTALL_IMAGE_SOURCE=
+    PACKAGES_TO_SB2INSTALL=
     RUNSCRIPTS_SEEN=
     PACKAGES_FROM_PREINSTALLIMAGE=
     GUESSED_DIST=unknown
@@ -748,6 +757,10 @@ else
 	fi
 	if test "$PKG" = "preinstallimagesource:" ; then
 	    PREINSTALL_IMAGE_SOURCE="$SRC"
+	    continue
+	fi
+	if test "$PKG" = "sb2install:" ; then
+	    PACKAGES_TO_SB2INSTALL=$SRC
 	    continue
 	fi
 	if test "$PKG" = "runscripts:" ; then
@@ -796,6 +809,18 @@ else
 	SRCSUF=${SRCSUF/%.pkg.tar.?z/.arch}
 	ln -s "$SRC" "$BUILD_INIT_CACHE/rpms/$PKG.${SRCSUF##*.}"
     done < $RPMLIST
+
+    # SB2 installs aren't part of the natural order, filter them out
+    if test -n "$PACKAGES_TO_SB2INSTALL" ; then
+	for SB2PKG in $PACKAGES_TO_SB2INSTALL ; do
+	    for PKG in $PACKAGES_TO_INSTALL ; do
+		if [ "x$PKG" != "x$SB2PKG" ]; then
+		    NEWPACKAGES_TO_INSTALL="$NEWPACKAGES_TO_INSTALL $PKG"
+		fi
+	    done
+	    PACKAGES_TO_INSTALL="$NEWPACKAGES_TO_INSTALL"
+	done
+    fi
 
     PACKAGES_TO_ALL="$PACKAGES_TO_INSTALL"
     PACKAGES_TO_AVAILABLE="$PACKAGES_TO_INSTALL"
@@ -865,6 +890,7 @@ else
         echo
     fi
 
+    test -n "$PACKAGES_TO_SB2INSTALL" && echo "sb2install   : $PACKAGES_TO_SB2INSTALL"
     # compatibility...
     test -z "$RUNSCRIPTS_SEEN" && PACKAGES_TO_RUNSCRIPTS="$PACKAGES_TO_PREINSTALL"
 
@@ -899,9 +925,9 @@ esac
 # test if we need to preinstall
 #
 if test ! -e $BUILD_ROOT/installed-pkg -a ! -e $BUILD_ROOT/.build/init_buildsystem.data ; then
-    mkdir -p -- $BUILD_INIT_CACHE/rpms $BUILD_ROOT/etc $BUILD_ROOT/proc || cleanup_and_exit 1
-    test -L $BUILD_ROOT/etc/HOSTNAME && buildroot_rm etc/HOSTNAME
-    test -f $BUILD_ROOT/etc/HOSTNAME || hostname -f > $BUILD_ROOT/etc/HOSTNAME
+    mkdir -p -- $BUILD_INIT_CACHE/rpms $BUILD_TARGET/etc $BUILD_TARGET/proc || cleanup_and_exit 1
+    test -L $BUILD_TARGET/etc/HOSTNAME && buildtarget_rm etc/HOSTNAME
+    test -f $BUILD_TARGET/etc/HOSTNAME || hostname -f > $BUILD_TARGET/etc/HOSTNAME
     for PKG in $PACKAGES_TO_RUNSCRIPTS ; do
 	: > $BUILD_INIT_CACHE/scripts/$PKG.run
     done
@@ -917,10 +943,19 @@ if test ! -e $BUILD_ROOT/installed-pkg -a ! -e $BUILD_ROOT/.build/init_buildsyst
     if test -n "$PREPARE_VM" ; then
         PACKAGES_TO_VMINSTALL_FILTERED=`reorder $PACKAGES_TO_VMINSTALL_FILTERED`
     fi
+    if test -n "$PACKAGES_TO_SB2INSTALL" ; then
+	mkdir -p $BUILD_ROOT/target
+	progress_setup PACKAGES_TO_SB2INSTALL
+	for PKG in $PACKAGES_TO_SB2INSTALL ; do
+	    progress_step PACKAGES_TO_SB2INSTALL
+	    preinstall ${PKG##*/} tools
+	done
+    fi
     progress_setup PACKAGES_TO_PREINSTALL_FILTERED
     for PKG in $PACKAGES_TO_PREINSTALL_FILTERED ; do
 	progress_step PACKAGES_TO_PREINSTALL_FILTERED
 	preinstall ${PKG##*/}
+	cd $BUILD_ROOT
     done
     if test -n "$PREPARE_VM" ; then
 	echo
@@ -928,6 +963,7 @@ if test ! -e $BUILD_ROOT/installed-pkg -a ! -e $BUILD_ROOT/.build/init_buildsyst
 	for PKG in $PACKAGES_TO_VMINSTALL_FILTERED ; do
 	    progress_step PACKAGES_TO_VMINSTALL_FILTERED
 	    preinstall ${PKG##*/}
+	    cd $BUILD_ROOT
 	done
     fi
     # for reorder
@@ -935,12 +971,12 @@ if test ! -e $BUILD_ROOT/installed-pkg -a ! -e $BUILD_ROOT/.build/init_buildsyst
     if test -w /root ; then
 	test -c $BUILD_ROOT/dev/null || create_devs
     fi
-    if ! test -e $BUILD_ROOT/etc/fstab ; then
-	rm -rf $BUILD_ROOT/etc/fstab
-	touch $BUILD_ROOT/etc/fstab
+    if ! test -e $BUILD_TARGET/etc/fstab ; then
+	rm -rf $BUILD_TARGET/etc/fstab
+	touch $BUILD_TARGET/etc/fstab
     fi
-    if test ! -e $BUILD_ROOT/etc/ld.so.conf -a -f $BUILD_ROOT/etc/ld.so.conf.in -a ! -L $BUILD_ROOT/etc/ld.so.conf.in ; then
-	cp --remove-destination $BUILD_ROOT/etc/ld.so.conf.in $BUILD_ROOT/etc/ld.so.conf
+    if test ! -e $BUILD_TARGET/etc/ld.so.conf -a -f $BUILD_TARGET/etc/ld.so.conf.in -a ! -L $BUILD_TARGET/etc/ld.so.conf.in ; then
+	cp --remove-destination $BUILD_TARGET/etc/ld.so.conf.in $BUILD_TARGET/etc/ld.so.conf
     fi
     if test -z "$PREPARE_VM" ; then
 	mount_stuff
@@ -1046,7 +1082,7 @@ done | "$BUILD_DIR/getbuildids"
 # get list and ids of already installed packages
 #
 mkdir -p $BUILD_INIT_CACHE/alreadyinstalled
-listinstalled --root "$BUILD_ROOT" --type "$PSUF" --extraname | (
+listinstalled --root "$BUILD_TARGET" --type "$PSUF" --extraname | (
     while read id name buildid; do
 	echo "$buildid" > "$BUILD_INIT_CACHE/alreadyinstalled/$name"
     done
@@ -1085,7 +1121,7 @@ fi
 rm -rf "$BUILD_ROOT/installed-pkg"
 mkdir -p "$BUILD_ROOT/installed-pkg"
 
-test -x $BUILD_ROOT/sbin/ldconfig && chroot $BUILD_ROOT /sbin/ldconfig 2>&1
+test -x $BUILD_TARGET/sbin/ldconfig && enter_target needroot /sbin/ldconfig 2>&1
 
 if test -n "$PACKAGES_TO_SYSROOTINSTALL" ; then
     # query sysroot config
@@ -1212,36 +1248,36 @@ fi
 #
 # setup /etc/mtab
 #
-ln -sf ../proc/self/mounts $BUILD_ROOT/etc/mtab
+ln -sf ../proc/self/mounts $BUILD_TARGET/etc/mtab
 
 #
 # make sure that our nis is not present in the chroot system
 #
-if test -e $BUILD_ROOT/etc/nsswitch.conf ; then
-    sed -e "s:nis::g" < $BUILD_ROOT/etc/nsswitch.conf > $BUILD_ROOT/etc/nsswitch.conf.tmp
-    mv $BUILD_ROOT/etc/nsswitch.conf.tmp $BUILD_ROOT/etc/nsswitch.conf
+if test -e $BUILD_TARGET/etc/nsswitch.conf ; then
+    sed -e "s:nis::g" < $BUILD_TARGET/etc/nsswitch.conf > $BUILD_TARGET/etc/nsswitch.conf.tmp
+    mv $BUILD_TARGET/etc/nsswitch.conf.tmp $BUILD_TARGET/etc/nsswitch.conf
 fi
 
 #
 # create some default directories and files
 #
 mkdir -p -- \
-    $BUILD_ROOT/usr/share/doc/packages \
-    $BUILD_ROOT/usr/X11R6/include/X11/pixmaps \
-    $BUILD_ROOT/usr/X11R6/include/X11/bitmaps \
-    $BUILD_ROOT/var/run \
-    $BUILD_ROOT/var/log \
-    $BUILD_ROOT/etc
-touch -- $BUILD_ROOT/var/run/utmp $BUILD_ROOT/var/log/wtmp $BUILD_ROOT/etc/fstab
+    $BUILD_TARGET/usr/share/doc/packages \
+    $BUILD_TARGET/usr/X11R6/include/X11/pixmaps \
+    $BUILD_TARGET/usr/X11R6/include/X11/bitmaps \
+    $BUILD_TARGET/var/run \
+    $BUILD_TARGET/var/log \
+    $BUILD_TARGET/etc
+touch -- $BUILD_TARGET/var/run/utmp $BUILD_TARGET/var/log/wtmp $BUILD_TARGET/etc/fstab
 
 echo now finalizing build dir...
-if test -x $BUILD_ROOT/sbin/ldconfig ; then
-	CHROOT_RETURN="`chroot $BUILD_ROOT /sbin/ldconfig 2>&1`"
+if test -x $BUILD_TARGET/sbin/ldconfig ; then
+	CHROOT_RETURN="`enter_target needroot /sbin/ldconfig 2>&1`"
 	case "$CHROOT_RETURN" in
 	    *warning:*)
-		chroot $BUILD_ROOT /sbin/ldconfig
+		enter_target needroot /sbin/ldconfig
 		echo
-		echo chroot $BUILD_ROOT /sbin/ldconfig
+		echo chroot $BUILD_TARGET /sbin/ldconfig
 		echo
 		echo "$CHROOT_RETURN"
 		echo
@@ -1252,29 +1288,29 @@ if test -x $BUILD_ROOT/sbin/ldconfig ; then
 	esac
 fi
 
-if test -x $BUILD_ROOT/usr/sbin/Check && ! grep -q "/usr/sbin/Check is obsolete" $BUILD_ROOT/usr/sbin/Check ; then
-    chroot $BUILD_ROOT /usr/sbin/Check
+if test -x $BUILD_TARGET/usr/sbin/Check && ! grep -q "/usr/sbin/Check is obsolete" $BUILD_TARGET/usr/sbin/Check ; then
+    enter_target needroot /usr/sbin/Check
 fi
 
-mkdir -p $BUILD_ROOT/var/adm/packages
-touch $BUILD_ROOT/var/adm/packages
+mkdir -p $BUILD_TARGET/var/adm/packages
+touch $BUILD_TARGET/var/adm/packages
 
-if test -x $BUILD_ROOT/sbin/SuSEconfig ; then
-    if grep norestarts $BUILD_ROOT/sbin/SuSEconfig > /dev/null ; then
-	chroot $BUILD_ROOT /sbin/SuSEconfig --norestarts --force
+if test -x $BUILD_TARGET/sbin/SuSEconfig ; then
+    if grep norestarts $BUILD_TARGET/sbin/SuSEconfig > /dev/null ; then
+	enter_target needroot /sbin/SuSEconfig --norestarts --force
     else
-	chroot $BUILD_ROOT /sbin/SuSEconfig --force
+	enter_target needroot /sbin/SuSEconfig --force
     fi
 fi
 
 for PROG in /usr/bin/TeX/texhash /usr/bin/texhash ; do
-    test -x $BUILD_ROOT/$PROG && \
-	chroot $BUILD_ROOT bash -c ". /etc/profile ; $PROG"
+    test -x $BUILD_TARGET/$PROG && \
+	enter_target needroot bash -c ". /etc/profile ; $PROG"
 done
 
-if test -e $BUILD_ROOT/usr/share/zoneinfo/UTC ; then
+if test -e $BUILD_TARGET/usr/share/zoneinfo/UTC ; then
     for PROG in /usr/sbin/zic /usr/bin/zic /bin/zic /sbin/zic ; do
-        test -x $BUILD_ROOT/$PROG  && chroot $BUILD_ROOT bash -c "$PROG -l \$(readlink -f /usr/share/zoneinfo/UTC)"
+        test -x $BUILD_TARGET/$PROG  && enter_target needroot bash -c "$PROG -l \$(readlink -f /usr/share/zoneinfo/UTC)"
     done
 fi
 
@@ -1290,8 +1326,8 @@ if test -d $BUILD_ROOT/usr/lib/build/finalize-system ; then
 fi
 
 test -e $BUILD_ROOT/.build/init_buildsystem.data || HOST=`hostname`
-test -e $BUILD_ROOT/etc/hosts || echo "127.0.0.1 localhost" > $BUILD_ROOT/etc/hosts
-if ! grep -F "127.0.0.1 $HOST" $BUILD_ROOT/etc/hosts > /dev/null ; then
+test -e $BUILD_TARGET/etc/hosts || echo "127.0.0.1 localhost" > $BUILD_TARGET/etc/hosts
+if ! grep -F "127.0.0.1 $HOST" $BUILD_TARGET/etc/hosts > /dev/null ; then
     # this makes a reverse lookup on 127.0.0.1 return the host name,
     # which is bad, but 127.0.0.2 does not work on all unix systems
     #
@@ -1309,12 +1345,12 @@ if ! grep -F "127.0.0.1 $HOST" $BUILD_ROOT/etc/hosts > /dev/null ; then
     # Long story short: if you need 127.0.0.2, explicitly add it as an address
     # on the interface no matter the OS!
     #
-    echo "127.0.0.1 $HOST" > $BUILD_ROOT/etc/hosts.new
-    test -f $BUILD_ROOT/etc/hosts && cat $BUILD_ROOT/etc/hosts >> $BUILD_ROOT/etc/hosts.new
-    mv $BUILD_ROOT/etc/hosts.new $BUILD_ROOT/etc/hosts
+    echo "127.0.0.1 $HOST" > $BUILD_TARGET/etc/hosts.new
+    test -f $BUILD_TARGET/etc/hosts && cat $BUILD_TARGET/etc/hosts >> $BUILD_TARGET/etc/hosts.new
+    mv $BUILD_TARGET/etc/hosts.new $BUILD_TARGET/etc/hosts
 fi
 
-rm -f $BUILD_ROOT/.rpmmacros $BUILD_ROOT/root/.rpmmacros
+rm -f $BUILD_TARGET/.rpmmacros $BUILD_TARGET/root/.rpmmacros
 rm -rf "$BUILD_INIT_CACHE"
 rm -f $BUILD_IS_RUNNING
 rm -f $TMPFILE

@@ -35,36 +35,38 @@ deb_chroot ()
     # when doing a 'chroot /' call lets subshell and change dir manually
     #
     (
-	cd $1 &&
+	# Ignore first argument (it's always $BUILD_ROOT)
+	shift
+	cd "$BUILD_TARGET" &&
 	    DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical \
 			   DEBCONF_NONINTERACTIVE_SEEN=true \
 			   LC_ALL=C LANGUAGE=C LANG=C \
-			   chroot $*
+			   enter_target needroot $*
     )
 }
 
 deb_setup() {
-    mkdir -p $BUILD_ROOT/var/lib/dpkg
-    mkdir -p $BUILD_ROOT/var/log
-    mkdir -p $BUILD_ROOT/etc/default
-    :>> $BUILD_ROOT/var/lib/dpkg/status
-    :>> $BUILD_ROOT/var/lib/dpkg/available
-    :>> $BUILD_ROOT/var/log/dpkg.log
-    :>> $BUILD_ROOT/etc/ld.so.conf
+    mkdir -p $BUILD_TARGET/var/lib/dpkg
+    mkdir -p $BUILD_TARGET/var/log
+    mkdir -p $BUILD_TARGET/etc/default
+    :>> $BUILD_TARGET/var/lib/dpkg/status
+    :>> $BUILD_TARGET/var/lib/dpkg/available
+    :>> $BUILD_TARGET/var/log/dpkg.log
+    :>> $BUILD_TARGET/etc/ld.so.conf
 
     # Install a policy so that services are not started. See
     # https://manpages.debian.org/unstable/init-system-helpers/invoke-rc.d.8.en.html
     # for details.
-    mkdir -p $BUILD_ROOT/usr/sbin
-    cat > $BUILD_ROOT/usr/sbin/policy-rc.d <<EOF
+    mkdir -p $BUILD_TARGET/usr/sbin
+    cat > $BUILD_TARGET/usr/sbin/policy-rc.d <<EOF
 #!/bin/sh
 exit 101
 EOF
-    chmod 755 $BUILD_ROOT/usr/sbin/policy-rc.d
+    chmod 755 $BUILD_TARGET/usr/sbin/policy-rc.d
 
     # Manpages database trigger takes a lot of time and is not useful in a build chroot
-    mkdir -p $BUILD_ROOT/var/cache/debconf/
-    cat >> $BUILD_ROOT/var/cache/debconf/config.dat <<EOF
+    mkdir -p $BUILD_TARGET/var/cache/debconf/
+    cat >> $BUILD_TARGET/var/cache/debconf/config.dat <<EOF
 Name: man-db/auto-update
 Template: man-db/auto-update
 Value: false
@@ -77,8 +79,8 @@ EOF
 pkg_initdb_deb() {
     deb_setup
     # force dpkg into database to make epoch test work
-    if ! test "$BUILD_ROOT/.init_b_cache/rpms/dpkg.deb" -ef "$BUILD_ROOT/.init_b_cache/dpkg.deb" ; then
-	cp --remove-destination $BUILD_ROOT/.init_b_cache/rpms/dpkg.deb $BUILD_ROOT/.init_b_cache/dpkg.deb || cleanup_and_exit 1
+    if ! test "$BUILD_TARGET/.init_b_cache/rpms/dpkg.deb" -ef "$BUILD_TARGET/.init_b_cache/dpkg.deb" ; then
+	cp --remove-destination $BUILD_TARGET/.init_b_cache/rpms/dpkg.deb $BUILD_TARGET/.init_b_cache/dpkg.deb || cleanup_and_exit 1
     fi
     DEB_UNSAFE_IO=
     chroot $BUILD_ROOT dpkg --force-unsafe-io --version >/dev/null 2>&1 && DEB_UNSAFE_IO="--force-unsafe-io"
@@ -99,15 +101,15 @@ pkg_install_deb() {
     # ugly workaround for upstart system. some packages (procps) try
     # to start a service in their configure phase. As we don't have
     # a running upstart, we just link the start binary to /bin/true
-    if test -e "$BUILD_ROOT/sbin/start"; then
-	if test "$BUILD_ROOT/sbin/start" -ef "$BUILD_ROOT/sbin/initctl" ; then
+    if test -e "$BUILD_TARGET/sbin/start"; then
+	if test "$BUILD_TARGET/sbin/start" -ef "$BUILD_TARGET/sbin/initctl" ; then
 	    echo "linking /sbin/start to /bin/true"
-	    mv "$BUILD_ROOT/sbin/start" "$BUILD_ROOT/sbin/start.disabled"
-	    ln -s "/bin/true" "$BUILD_ROOT/sbin/start"
+	    mv "$BUILD_TARGET/sbin/start" "$BUILD_TARGET/sbin/start.disabled"
+	    ln -s "/bin/true" "$BUILD_TARGET/sbin/start"
 	fi
     fi
     # another workaround, see bug bnc#733699
-    rm -f "$BUILD_ROOT/var/run/init.upgraded"
+    rm -f "$BUILD_TARGET/var/run/init.upgraded"
 }
 
 pkg_erase_deb() {
@@ -116,7 +118,7 @@ pkg_erase_deb() {
       while read line; do
           case "$line" in
               subprocess\ installed\ *script\ returned\ error\ exit\ status*)
-                 chroot $BUILD_ROOT rm -f /var/lib/dpkg/info/$PKG.{pre,post}rm
+                 deb_chroot $BUILD_ROOT rm -f /var/lib/dpkg/info/$PKG.{pre,post}rm
                  retry=1
               ;;
               *) echo "$line" ;;
@@ -177,20 +179,20 @@ pkg_preinstall_deb() {
 }
 
 pkg_runscripts_deb() {
-    if ! test -e $BUILD_ROOT/var/lib/dpkg/status ; then
+    if ! test -e $BUILD_TARGET/var/lib/dpkg/status ; then
 	deb_setup
     fi
-    if test -e "$BUILD_ROOT/.init_b_cache/scripts/$PKG.pre" ; then
+    if test -e "$BUILD_TARGET/.init_b_cache/scripts/$PKG.pre" ; then
 	echo "running $PKG preinstall script"
 	deb_chroot $BUILD_ROOT ".init_b_cache/scripts/$PKG.pre" install \
 		   < /dev/null
-	rm -f "$BUILD_ROOT/.init_b_cache/scripts/$PKG.pre"
+	rm -f "$BUILD_TARGET/.init_b_cache/scripts/$PKG.pre"
     fi
-    if test -e "$BUILD_ROOT/.init_b_cache/scripts/$PKG.post" ; then
+    if test -e "$BUILD_TARGET/.init_b_cache/scripts/$PKG.post" ; then
 	echo "running $PKG postinstall script"
 	deb_chroot $BUILD_ROOT ".init_b_cache/scripts/$PKG.post" configure '' \
 		   < /dev/null
-	rm -f "$BUILD_ROOT/.init_b_cache/scripts/$PKG.post"
+	rm -f "$BUILD_TARGET/.init_b_cache/scripts/$PKG.post"
     fi
 }
 

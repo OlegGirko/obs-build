@@ -70,10 +70,10 @@ pkg_autodetect_type() {
 	cleanup_and_exit 1 "cannot autodetect build type when using a preinstall image"
     fi
     PSUF=
-    test -e $BUILD_ROOT/.init_b_cache/rpms/rpm.rpm && PSUF=rpm
-    test -e $BUILD_ROOT/.init_b_cache/rpms/dpkg.deb && PSUF=deb
-    test -e $BUILD_ROOT/.init_b_cache/rpms/pacman.arch && PSUF=arch
-    test -e $BUILD_ROOT/.init_b_cache/rpms/apk.apk && PSUF=apk
+    test -e $BUILD_TARGET/.init_b_cache/rpms/rpm.rpm && PSUF=rpm
+    test -e $BUILD_TARGET/.init_b_cache/rpms/dpkg.deb && PSUF=deb
+    test -e $BUILD_TARGET/.init_b_cache/rpms/pacman.arch && PSUF=arch
+    test -e $BUILD_TARGET/.init_b_cache/rpms/apk.apk && PSUF=apk
     if test -z "$PSUF" ; then
 	cleanup_and_exit 1 "could not autodetect package type"
     fi

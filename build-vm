@@ -74,7 +74,7 @@ EMULATOR_SCRIPT=
 # openstack specific
 VM_OPENSTACK_FLAVOR=
 
-for i in ec2 emulator kvm lxc openstack qemu uml xen zvm docker podman pvm nspawn; do
+for i in ec2 emulator kvm lxc openstack qemu uml xen zvm docker podman pvm nspawn sb2; do
     . "$BUILD_DIR/build-vm-$i"
 done
 
@@ -152,7 +152,7 @@ vm_parse_options() {
                 VM_TYPE_CONTAINER=true
                 VM_TYPE=${VM_TYPE%:*}
             ;;
-	    lxc|podman|docker|nspawn)
+	    lxc|podman|docker|nspawn|sb2)
                 VM_TYPE_CONTAINER=true
             ;;
 	    ec2|xen|kvm|uml|qemu|emulator|openstack|zvm|pvm)
@@ -1072,7 +1072,11 @@ vm_first_stage() {
 
     vm_init_script="/.build/build"
     if set_initvm_name_for_emulator_in "$BUILD_ROOT/.build" ; then
-        vm_init_script="/.build/$INITVM_NAME"
+        if test -n "$BUILD_SB2FLAGS" -a -e "$BUILD_DIR/initscript_sb2" ; then
+            vm_init_script="/.build/initscript_sb2"
+        else
+	    vm_init_script="/.build/$INITVM_NAME"
+        fi
     fi
 
     if test -n "$VM_ROOT" ; then

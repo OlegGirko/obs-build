@@ -67,9 +67,9 @@ pkg_autodetect_type() {
 	cleanup_and_exit 1
     fi
     PSUF=
-    test -e $BUILD_ROOT/.init_b_cache/rpms/rpm.rpm && PSUF=rpm
-    test -e $BUILD_ROOT/.init_b_cache/rpms/dpkg.deb && PSUF=deb
-    test -e $BUILD_ROOT/.init_b_cache/rpms/pacman.arch && PSUF=arch
+    test -e $BUILD_TARGET/.init_b_cache/rpms/rpm.rpm && PSUF=rpm
+    test -e $BUILD_TARGET/.init_b_cache/rpms/dpkg.deb && PSUF=deb
+    test -e $BUILD_TARGET/.init_b_cache/rpms/pacman.arch && PSUF=arch
     if test -z "$PSUF" ; then
 	echo "could not autodetect package type" >&2
 	cleanup_and_exit 1

@@ -124,12 +124,12 @@ recipe_prepare_dsc() {
     fi
 
     # run/copy sources
-    chroot $BUILD_ROOT su -c "dpkg-source -x $DEB_SOURCEDIR/$DEB_DSCFILE $TOPDIR/BUILD" - $BUILD_USER
+    enter_target needuser dpkg-source -x $DEB_SOURCEDIR/$DEB_DSCFILE $TOPDIR/BUILD
 
     # Alternative to debtransform: apply OBS release number if tag OBS-DCH-RELEASE is set.
     if test -z "$DEB_TRANSFORM" && grep -Eq '^OBS-DCH-RELEASE: 1' $BUILD_ROOT$TOPDIR/SOURCES/$RECIPEFILE; then
         OBS_DCH_RELEASE="+$DEB_RELEASE"
-        chroot $BUILD_ROOT su -c /bin/sh <<EOF
+        enter_target needroot /bin/sh <<EOF
 cd $TOPDIR/BUILD
 [ ! -f debian/changelog ] && exit 0
 # avoid devscripts dependency and mimic dch
@@ -187,7 +187,7 @@ dsc_move_build_result() {
 
 
 recipe_build_dsc() {
-    dsc_build "$BUILD_ROOT"
+    dsc_build "$BUILD_TARGET"
     dsc_move_build_result
 }
 

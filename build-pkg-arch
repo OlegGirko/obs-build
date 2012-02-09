@@ -22,10 +22,10 @@
 ################################################################
 
 pkg_initdb_arch() {
-    mkdir -p $BUILD_ROOT/var/lib/pacman/sync
-    touch $BUILD_ROOT/var/lib/pacman/sync/core.db
-    touch $BUILD_ROOT/var/lib/pacman/sync/extra.db
-    touch $BUILD_ROOT/var/lib/pacman/sync/community.db
+    mkdir -p $BUILD_TARGET/var/lib/pacman/sync
+    touch $BUILD_TARGET/var/lib/pacman/sync/core.db
+    touch $BUILD_TARGET/var/lib/pacman/sync/extra.db
+    touch $BUILD_TARGET/var/lib/pacman/sync/community.db
 }
 
 pkg_prepare_arch() {
@@ -50,7 +50,7 @@ pkg_install_arch() {
     # https://bbs.archlinux.org/viewtopic.php?id=129661
     (cd $BUILD_ROOT/etc && sed -i "s/^CheckSpace/#CheckSpace/g" pacman.conf)
     # -d -d disables deps checking
-    ( cd $BUILD_ROOT && chroot $BUILD_ROOT pacman -U --force -d -d --noconfirm .init_b_cache/$PKG.$PSUF 2>&1 || touch $BUILD_ROOT/exit ) | \
+    ( cd $BUILD_TARGET && enter_target needroot pacman -U --force -d -d --noconfirm .init_b_cache/$PKG.$PSUF 2>&1 || touch $BUILD_ROOT/exit ) | \
 	perl -ne '$|=1;/^(warning: could not get filesystem information for |loading packages|looking for inter-conflicts|looking for conflicting packages|Targets |Total Installed Size: |Net Upgrade Size: |Proceed with installation|checking package integrity|loading package files|checking for file conflicts|checking keyring|Packages \(\d+\)|:: Proceed with installation|:: Processing package changes|checking available disk space|installing |upgrading |warning:.*is up to date -- reinstalling|Optional dependencies for|    )/||/^$/||print'
 }
 
@@ -59,7 +59,7 @@ pkg_finalize_arch() {
 }
 
 pkg_preinstall_arch() {
-    $TAR -f "$BUILD_ROOT/.init_b_cache/rpms/$PKG.arch"
+    $TAR -f "$BUILD_TARGET/.init_b_cache/rpms/$PKG.arch"
     if test -f .INSTALL ; then
 	cat .INSTALL > ".init_b_cache/scripts/$PKG.post"
 	echo 'type post_install >/dev/null 2>&1 && post_install' >> ".init_b_cache/scripts/$PKG.post"
@@ -68,9 +68,9 @@ pkg_preinstall_arch() {
 }
 
 pkg_runscripts_arch() {
-    if test -e "$BUILD_ROOT/.init_b_cache/scripts/$PKG.post" ; then
+    if test -e "$BUILD_TARGET/.init_b_cache/scripts/$PKG.post" ; then
 	echo "running $PKG postinstall script"
-	( cd $BUILD_ROOT && chroot $BUILD_ROOT ".init_b_cache/scripts/$PKG.post" < /dev/null )
-	rm -f "$BUILD_ROOT/.init_b_cache/scripts/$PKG.post"
+	( cd $BUILD_TARGET && enter_target needroot ".init_b_cache/scripts/$PKG.post" < /dev/null )
+	rm -f "$BUILD_TARGET/.init_b_cache/scripts/$PKG.post"
     fi
 }

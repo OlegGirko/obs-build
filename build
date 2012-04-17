@@ -3058,7 +3058,10 @@ for SPECFILE in "${SPECFILES[@]}" ; do
 	if test -n "$shell"; then
 	    enter_target needroot bash
 	else
-	    enter_target needuser "cd $TOPDIR/BUILD && $DSC_BUILD_CMD" < /dev/null && BUILD_SUCCEEDED=true
+            echo "#!/bin/sh" > $BUILD_ROOT/.debbuildscript 
+            echo "cd $TOPDIR/BUILD && $DSC_BUILD_CMD" >> $BUILD_ROOT/.debbuildscript
+            chmod +x $BUILD_ROOT/.debbuildscript
+            enter_target needuser "/.debbuildscript" < /dev/null && BUILD_SUCCEEDED=true
 	    if test "$BUILD_SUCCEEDED" = true -a "$DO_CHECKS" != "false"; then
                DEB_CHANGESFILE=${SPECFILE%.dsc}_"$(chroot $BUILD_ROOT su -c 'dpkg-architecture -qDEB_BUILD_ARCH')".changes
                enter_target needuser "which lintian > /dev/null && cd $TOPDIR && echo Running lintian && (set -x && lintian -i $DEB_SOURCEDIR/$DEB_DSCFILE)" < /dev/null

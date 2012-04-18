@@ -77,12 +77,12 @@ vm_startup_xen() {
     echo "on_reboot = \"destroy\""                                           >> $XEN_CONF_FILE
     echo "on_crash = \"destroy\""                                            >> $XEN_CONF_FILE
     if test "$XMCMD" = xm ; then
-	set -- xm create -c $XEN_CONF_FILE name="build_$XENID" $XMROOT $XMSWAP extra="panic=1 quiet init="$vm_init_script" rd.driver.pre=binfmt_misc elevator=noop console=$VM_CONSOLE"
+	set -- xm create -c $XEN_CONF_FILE name="build_$XENID" $XMROOT $XMSWAP extra="panic=1 quiet init="$vm_init_script" rd.driver.pre=binfmt_misc elevator=noop console=$VM_CONSOLE rw"
     else
 	XLDISK=
 	XLDISK="\"${XMROOT#disk=}\""
 	test -n "$XMSWAP" && XLDISK="$XLDISK, \"${XMSWAP#disk=}\""
-	set -- xl create -c $XEN_CONF_FILE name="\"build_$XENID\"" "disk=[ $XLDISK ]" extra=\""$vm_linux_always_append init="$vm_init_script" rd.driver.pre=binfmt_misc $vm_linux_kernel_parameter console=$VM_CONSOLE"\"
+	set -- xl create -c $XEN_CONF_FILE name="\"build_$XENID\"" "disk=[ $XLDISK ]" extra=\""$vm_linux_always_append init="$vm_init_script" rd.driver.pre=binfmt_misc $vm_linux_kernel_parameter console=$VM_CONSOLE rw"\"
     fi
     if test "$PERSONALITY" != 0 ; then
 	# have to switch back to PER_LINUX to make xm work

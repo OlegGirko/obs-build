@@ -3,6 +3,11 @@
 # Set ABUILD_UID and ABUILD_GID from saved data
 . /.build/build.data
 
+# Xen needs the / remounted rw in SB2
+if [[ -e /proc/sys/xen/independent_wallclock ]]; then
+    mount -o remount,rw -t ext4 /dev/hda1 /
+fi
+
 echo "Setting up abuild user in $BUILD_ROOT for SB2"
 echo "abuild::${ABUILD_UID}:${ABUILD_GID}:Autobuild:/home/abuild:/bin/bash" >> /etc/passwd
 echo 'abuild:*:::::::' >>/etc/shadow # This is needed on Mandriva 2009

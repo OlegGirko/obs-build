@@ -61,6 +61,7 @@ ABUILD_GID=399
 
 DO_INIT=true
 DO_INIT_TOPDIR=true
+DO_BUILD=true
 DO_LINT=
 DO_CHECKS=true
 CLEAN_BUILD=
@@ -149,6 +150,10 @@ Known Parameters:
 
   --no-init   Skip initialization of build root and start with build
               immediately.
+
+  --chroot-only
+              Exit once the chroot has been setup and before the build
+              starts. Useful for making development root filesystems.
 
   --no-checks Do not run checks (postbuild and %check)
 
@@ -334,7 +339,7 @@ EOT
 }
 
 usage () {
-    echo "Usage: `basename $0` [--no-init|--clean|--rpms path|--verify|--help] [dir-to-build|recipe-to-build]"
+    echo "Usage: `basename $0` [--no-init|--chroot-only|--clean|--rpms path|--verify|--help] [dir-to-build|recipe-to-build]"
     cleanup_and_exit 1
 }
 
@@ -699,6 +704,9 @@ while test -n "$1"; do
       -noinit|-no-init)
 	test "$DO_INIT" = false && DO_INIT_TOPDIR=false
 	DO_INIT=false
+      ;;
+      -chroot-only)
+	DO_BUILD=false
       ;;
       -nochecks|-no-checks)
 	DO_CHECKS=false
@@ -1313,6 +1321,10 @@ for RECIPEFILE in "${RECIPEFILES[@]}" ; do
 
     if test -n "$RSYNCSRC" ; then
 	run_rsync
+    fi
+
+    if test "$DO_BUILD" = false ; then
+	continue
     fi
 
     start_time=`date +%s`

@@ -18,7 +18,7 @@ test -z "$BUILD_ROOT" && BUILD_ROOT=/var/tmp/build-root
 test -z "$CONFIG_DIR" && CONFIG_DIR="$BUILD_DIR/configs"
 
 export BUILD_ARCH BUILD_HOST_ARCH BUILD_TARGET BUILD_ROOT BUILD_SB2FLAGS BUILD_RPMS BUILD_DIR BUILD_DEBUG VM_TYPE
-export BUILD_DIST
+export BUILD_DIST DO_BUILD
 
 icecream=0
 definesnstuff=()
@@ -42,6 +42,7 @@ ABUILD_UID=399
 ABUILD_GID=399
 
 DO_INIT=true
+DO_BUILD=${DO_BUILD:-true}
 DO_LINT=
 DO_CHECKS=true
 CLEAN_BUILD=
@@ -129,6 +130,10 @@ Known Parameters:
 
   --no-init   Skip initialization of build root and start with build
               immediately.
+
+  --chroot-only
+              Exit once the chroot has been setup and before the build
+              starts. Useful for making development root filesystems.
 
   --no-checks Do not run checks (postbuild and %check)
 
@@ -316,7 +321,7 @@ EOT
 }
 
 usage () {
-    echo "Usage: `basename $0` [--no-init|--clean|--rpms path|--verify|--help] [dir-to-build|recipe-to-build]"
+    echo "Usage: `basename $0` [--no-init|--chroot-only|--clean|--rpms path|--verify|--help] [dir-to-build|recipe-to-build]"
     cleanup_and_exit 1
 }
 
@@ -678,6 +683,9 @@ while test -n "$1"; do
       ;;
       -noinit|-no-init)
 	DO_INIT=false
+      ;;
+      -chroot-only)
+	DO_BUILD=false
       ;;
       -nochecks|-no-checks)
 	DO_CHECKS=false
@@ -1282,6 +1290,11 @@ for RECIPEFILE in "${RECIPEFILES[@]}" ; do
 
     if test -n "$RSYNCSRC" ; then
 	run_rsync
+    fi
+
+    if test "$DO_BUILD" = false ; then
+	echo "Not doing build as requested"
+	continue
     fi
 
     start_time=`date +%s`

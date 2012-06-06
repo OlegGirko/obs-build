@@ -52,6 +52,7 @@ ABUILD_UID=399
 ABUILD_GID=399
 
 DO_INIT=true
+DO_BUILD=true
 DO_LINT=
 DO_CHECKS=true
 CLEAN_BUILD=
@@ -154,6 +155,10 @@ Known Parameters:
 
   --no-init   Skip initialization of build root and start with build
               immediately.
+
+  --chroot-only
+              Exit once the chroot has been setup and before the build
+              starts. Useful for making development root filesystems.
 
   --no-checks Do not run post-build checks
 
@@ -294,7 +299,7 @@ Remember to have fun!
 EOT
 }
 usage () {
-    echo "Usage: `basename $0` [--no-init|--clean|--rpms path|--verify|--help] [dir-to-build|spec-to-build]"
+    echo "Usage: `basename $0` [--no-init|--chroot-only|--clean|--rpms path|--verify|--help] [dir-to-build|spec-to-build]"
     cleanup_and_exit 1
 }
 
@@ -831,6 +836,9 @@ while test -n "$1"; do
       ;;
       *-no*init)
 	DO_INIT=false
+      ;;
+      *-chroot-only)
+	DO_BUILD=false
       ;;
       *-no*checks)
 	DO_CHECKS=false
@@ -2104,6 +2112,10 @@ for SPECFILE in "${SPECFILES[@]}" ; do
 	else
 	    echo "RSYNCSRC given, but not RSYNCDEST - skipping"
 	fi
+    fi
+
+    if test "$DO_BUILD" = false ; then
+	continue
     fi
 
     if test "$BUILDTYPE" = spec ; then

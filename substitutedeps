@@ -174,7 +174,8 @@ for my $line (@$xspec) {
 	  $line =~ s/<SPEC_REL>/$spec_rel/g;
 	}
       }
-      $line =~ s/<SPEC_REL>//g;	# no recursion please
+      # May be passed in via prjconf in $release so must be done late.
+      $line =~ s/<SPEC_REL>/$spec_rel/g;
     } else {
       # remove macros, as rpm doesn't like them
       $line =~ s/<RELEASE\d*>/0/;

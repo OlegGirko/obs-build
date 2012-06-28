@@ -36,7 +36,7 @@ test -z "$BUILD_ROOT" && BUILD_ROOT=/var/tmp/build-root
 test -z "$CONFIG_DIR" && CONFIG_DIR="$BUILD_DIR/configs"
 
 export BUILD_ARCH BUILD_HOST_ARCH BUILD_TARGET BUILD_ROOT BUILD_SB2FLAGS BUILD_RPMS BUILD_DIR BUILD_DEBUG VM_TYPE
-export BUILD_DIST
+export BUILD_DIST DO_BUILD
 
 icecream=0
 definesnstuff=()
@@ -61,7 +61,7 @@ ABUILD_GID=399
 
 DO_INIT=true
 DO_INIT_TOPDIR=true
-DO_BUILD=true
+DO_BUILD=${DO_BUILD:-true}
 DO_LINT=
 DO_CHECKS=true
 CLEAN_BUILD=
@@ -1399,6 +1399,7 @@ for RECIPEFILE in "${RECIPEFILES[@]}" ; do
     fi
 
     if test "$DO_BUILD" = false ; then
+	echo "Not doing build as requested"
 	continue
     fi
 

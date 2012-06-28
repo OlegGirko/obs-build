@@ -1,0 +1,5 @@
+* Thu Jun 28 2012 David Greaves <david@dgreaves.com> - 2012.05.31-1
+ - Mer packaging of OBS build script
+ - Adds support for Scratchbox2
+ - Fixes a quoting problem with Harmattan
+ - Handles Xen remount issue on MeeGo community OBS

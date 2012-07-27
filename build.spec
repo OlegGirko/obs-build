@@ -21,7 +21,7 @@ Summary:        A Script to Build SUSE Linux RPMs
 License:        GPL-2.0+
 Group:          Development/Tools/Building
 Version:        2012.05.31
-Release:        1
+Release:        mer2
 #!BuildIgnore:  build-mkbaselibs
 Source:         obs-build-%{version}.tar.bz2
 Patch1: 0001-Add-support-for-using-Scratchbox2-together-with-OBS-.patch
@@ -30,6 +30,9 @@ Patch3: 0003-build-init_buildsystem-should-copy-also-symlink-qemu.patch
 Patch4: 0004-Workaround-quoting-problem-with-Harmattan.patch
 Patch5: 0005-Support-Xen-on-MeeGo-OBS.patch
 Patch6: 0006-SPEC_REL-can-be-in-prjconf-and-must-be-substituted-a.patch
+Patch7: 0007-initial-support-for-chroot-only.patch
+Patch8: 0008-chroot-only-fixup.patch
+Patch9: 0009-Add-skip-prep-to-ask-a-suitable-rpm-to-skip-the-prep.patch
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 BuildArch:      noarch
 # Manual requires to avoid hard require to bash-static
@@ -98,6 +101,9 @@ for generating delta rpm packages.
 %patch4 -p1
 %patch5 -p1
 %patch6 -p1
+%patch7 -p1
+%patch8 -p1
+%patch9 -p1
 
 %build
 

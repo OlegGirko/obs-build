@@ -1,3 +1,7 @@
+* Fri Jul 27 2012 David Greaves <david@dgreaves.com> - 2012.05.31-mer2
+ - Add --chroot-only and --skip-prep options
+ - mer-2012.05.3mer2
+
 * Thu Jun 28 2012 David Greaves <david@dgreaves.com> - 2012.05.31-1
  - Mer packaging of OBS build script
  - Adds support for Scratchbox2

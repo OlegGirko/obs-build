@@ -175,6 +175,10 @@ Known Parameters:
               Exit once the chroot has been setup and before the build
               starts. Useful for making development root filesystems.
 
+  --skip-prep
+              When running build, skip the %prep phase. This can be
+              useful when using rsync.
+
   --no-checks Do not run checks (postbuild and %check)
 
   --lint      Run rpmlint after build.
@@ -808,6 +812,9 @@ while test -n "$1"; do
       ;;
       -chroot-only)
 	DO_BUILD=false
+      ;;
+      -skip-prep)
+	SKIP_PREP=true
       ;;
       -nochecks|-no-checks)
 	DO_CHECKS=false

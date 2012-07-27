@@ -179,6 +179,10 @@ Known Parameters:
               Exit once the chroot has been setup and before the build
               starts. Useful for making development root filesystems.
 
+  --skip-prep
+              When running build, skip the %prep phase. This can be
+              useful when using rsync.
+
   --no-checks Do not run post-build checks
 
   --lint      Run rpmlint after build.
@@ -1134,6 +1138,9 @@ while test -n "$1"; do
       ;;
       *-chroot-only)
 	DO_BUILD=false
+      ;;
+      *-skip-prep)
+	SKIP_PREP=true
       ;;
       *-no*checks)
 	DO_CHECKS=false
@@ -2829,7 +2836,10 @@ for SPECFILE in "${SPECFILES[@]}" ; do
     #
     # now clean up RPM building directories
     #
-    rm -rf "$BUILD_ROOT$TOPDIR"
+    if test -z "$SKIP_PREP"; then
+	# Don't clean up if we're using skip-prep
+	rm -rf "$BUILD_ROOT$TOPDIR"
+    fi
     for i in BUILD RPMS/`uname -m` RPMS/i386 RPMS/noarch SOURCES SPECS SRPMS BUILDROOT OTHER ; do
 	mkdir -p $BUILD_ROOT$TOPDIR/$i
     done
@@ -3033,6 +3043,10 @@ for SPECFILE in "${SPECFILES[@]}" ; do
 	if test -n "$RSYNCDONE" ; then
 	    rpmbopts[${#rpmbopts[@]}]='--define'
 	    rpmbopts[${#rpmbopts[@]}]="RSYNCDONE 1"
+	fi
+	if [ -n "$SKIP_PREP" ] ; then
+		rpmbopts[${#rpmbopts[@]}]='--skip-prep'
+		rpmbopts[${#rpmbopts[@]}]='--skip-clean'
 	fi
 
 	rpmbuild=rpmbuild

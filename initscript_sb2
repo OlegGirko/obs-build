@@ -3,7 +3,9 @@ ABUILD_UID=399
 ABUILD_GID=399
 
 # Xen needs the / remounted rw in SB2
-mount -o remount,rw -t ext4 /dev/hda1 /
+if [[ -e /proc/sys/xen/independent_wallclock ]]; then
+    mount -o remount,rw -t ext4 /dev/hda1 /
+fi
 
 echo "Setting up abuild user in $BUILD_ROOT for SB2"
 echo "abuild::${ABUILD_UID}:${ABUILD_GID}:Autobuild:/home/abuild:/bin/bash" >> /etc/passwd

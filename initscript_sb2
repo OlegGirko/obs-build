@@ -1,6 +1,7 @@
 #!/bin/bash
-ABUILD_UID=399
-ABUILD_GID=399
+
+# Set ABUILD_UID and ABUILD_GID from saved data
+. /.build/build.data
 
 # Xen needs the / remounted rw in SB2
 if [[ -e /proc/sys/xen/independent_wallclock ]]; then

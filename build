@@ -735,13 +735,13 @@ copy_overlay() {
 run_rsync() {
     if test -n "$RSYNCDEST" ; then
 	if test -d "$RSYNCSRC" ; then
-	    if ! test -d "$BUILD_TARGET/$RSYNCDEST" ; then
-		echo "ATTENTION! Creating missing target directory ($BUILD_TARGET/$RSYNCDEST)."
-		mkdir -p $BUILD_TARGET/$RSYNCDEST
+	    if ! test -d "$BUILD_ROOT/$RSYNCDEST" ; then
+		echo "ATTENTION! Creating missing target directory ($BUILD_ROOT/$RSYNCDEST)."
+		mkdir -p $BUILD_ROOT/$RSYNCDEST
 	    fi
 	    echo "Running rsync ..."
-	    rsync -av $RSYNCSRC/* $BUILD_TARGET/$RSYNCDEST/
-	    chown -R "$ABUILD_UID:$ABUILD_GID" "$BUILD_TARGET/$RSYNCDEST"
+	    rsync -av $RSYNCSRC/* $BUILD_ROOT/$RSYNCDEST/
+	    chown -R "$ABUILD_UID:$ABUILD_GID" "$BUILD_ROOT/$RSYNCDEST"
 	    RSYNCDONE=true
 	    echo "... done"
 	else

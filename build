@@ -2105,6 +2105,38 @@ for SPECFILE in "${SPECFILES[@]}" ; do
 	fi
     fi
 
+    # Do the overlay and rsync before entering any lxc or chroot
+    if test -n "$OVERLAY" ; then
+	if test -d "$OVERLAY"; then
+	    pushd $OVERLAY
+	    echo "Copying overlay to BUILD_TARGET"
+	    tar -cpf - . | (cd $BUILD_TARGET ; tar -xvf -)
+	    popd
+	else
+	    echo "OVERLAY ($OVERLAY) is no directory - skipping"
+	fi
+    fi
+
+    if test -n "$RSYNCSRC" ; then
+	if test -n "$RSYNCDEST"; then
+	    if test -d "$RSYNCSRC"; then
+		if ! test -d "$BUILD_TARGET/$RSYNCDEST"; then
+		    echo "ATTENTION! Creating target directory ($BUILD_TARGET/$RSYNCDEST) as its not there."
+		    mkdir -p $BUILD_TARGET/$RSYNCDEST
+		fi
+		echo "Running rsync ..."
+		rsync -av $RSYNCSRC/* $BUILD_TARGET/$RSYNCDEST/
+		chown -R "$ABUILD_UID:$ABUILD_GID" "$BUILD_TARGET/$RSYNCDEST"
+		RSYNCDONE=true
+		echo "... done"
+	    else
+		echo "RSYNCSRC is no directory - skipping"
+	    fi
+	else
+	    echo "RSYNCSRC given, but not RSYNCDEST - skipping"
+	fi
+    fi
+
     if test -n "$VM_TYPE" -a -z "$RUNNING_IN_VM"; then
 	rm -rf "$BUILD_ROOT/.build"
 	mkdir -p "$BUILD_ROOT/.build"
@@ -2982,37 +3014,6 @@ for SPECFILE in "${SPECFILES[@]}" ; do
     fi
 
     BUILD_SUCCEEDED=false
-
-    if test -n "$OVERLAY" ; then
-	if test -d "$OVERLAY"; then
-	    pushd $OVERLAY
-	    echo "Copying overlay to BUILD_TARGET"
-	    tar -cpf - . | (cd $BUILD_TARGET ; tar -xvf -)
-	    popd
-	else
-	    echo "OVERLAY ($OVERLAY) is no directory - skipping"
-	fi
-    fi
-
-    if test -n "$RSYNCSRC" ; then
-	if test -n "$RSYNCDEST"; then
-	    if test -d "$RSYNCSRC"; then
-		if ! test -d "$BUILD_TARGET/$RSYNCDEST"; then
-		    echo "ATTENTION! Creating target directory ($BUILD_TARGET/$RSYNCDEST) as its not there."
-		    mkdir -p $BUILD_TARGET/$RSYNCDEST
-		fi
-		echo "Running rsync ..."
-		rsync -av $RSYNCSRC/* $BUILD_TARGET/$RSYNCDEST/
-		chown -R "$ABUILD_UID:$ABUILD_GID" "$BUILD_TARGET/$RSYNCDEST"
-		RSYNCDONE=true
-		echo "... done"
-	    else
-		echo "RSYNCSRC is no directory - skipping"
-	    fi
-	else
-	    echo "RSYNCSRC given, but not RSYNCDEST - skipping"
-	fi
-    fi
 
     if test "$DO_BUILD" = false ; then
 	echo "Not doing build as requested"

@@ -33,6 +33,13 @@ Patch6: 0006-SPEC_REL-can-be-in-prjconf-and-must-be-substituted-a.patch
 Patch7: 0007-initial-support-for-chroot-only.patch
 Patch8: 0008-chroot-only-fixup.patch
 Patch9: 0009-Add-skip-prep-to-ask-a-suitable-rpm-to-skip-the-prep.patch
+Patch10: 0010-Only-run-the-xen-remount-in-xen-guests.patch
+Patch11: 0011-Pass-the-ABUILD_UID-GID-to-the-sb2-init.patch
+Patch12: 0012-Workaround-for-bug-https-bugs.merproject.org-show.patch
+Patch13: 0013-Move-the-rsync-overlay-actions-prior-to-any-2nd-stag.patch
+Patch14: 0014-Pass-the-RSYNCDONE-flag-to-the-2nd-stage.patch
+Patch15: 0015-Pass-the-SKIP_PREP-flag-to-the-2nd-stage.patch
+Patch16: 0016-We-rsync-to-the-BUILD_ROOT-not-the-BUILD_TARGET.patch
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 BuildArch:      noarch
 # Manual requires to avoid hard require to bash-static
@@ -104,6 +111,13 @@ for generating delta rpm packages.
 %patch7 -p1
 %patch8 -p1
 %patch9 -p1
+%patch10 -p1
+%patch11 -p1
+%patch12 -p1
+%patch13 -p1
+%patch14 -p1
+%patch15 -p1
+%patch16 -p1
 
 %build
 

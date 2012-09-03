@@ -21,7 +21,7 @@ Summary:        A Script to Build SUSE Linux RPMs
 License:        GPL-2.0+
 Group:          Development/Tools/Building
 Version:        2012.05.31
-Release:        mer2
+Release:        mer3
 #!BuildIgnore:  build-mkbaselibs
 Source:         obs-build-%{version}.tar.bz2
 Patch1: 0001-Add-support-for-using-Scratchbox2-together-with-OBS-.patch

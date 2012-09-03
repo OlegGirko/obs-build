@@ -1,3 +1,7 @@
+* Mon Sep 03 2012 David Greaves <david@dgreaves.com> -
+ - Only remount xen when in a domu
+ - Fixes for sb2 quickbuild (RSYNC, ABUILD_GID, SKIP_PREP)
+
 * Fri Jul 27 2012 David Greaves <david@dgreaves.com> - 2012.05.31-mer2
  - Add --chroot-only and --skip-prep options
  - mer-2012.05.3mer2

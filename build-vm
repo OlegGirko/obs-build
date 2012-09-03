@@ -975,6 +975,7 @@ vm_first_stage() {
 	# abuild user equivalence is useful
 	echo "ABUILD_UID='${ABUILD_UID//"'"/$Q}'" >> $BUILD_ROOT/.build/build.data
 	echo "ABUILD_GID='${ABUILD_GID//"'"/$Q}'" >> $BUILD_ROOT/.build/build.data
+	echo "RSYNCDONE='${RSYNCDONE//"'"/$Q}'" >> $BUILD_ROOT/.build/build.data
     fi
     echo "BUILD_JOBS='${BUILD_JOBS//"'"/$Q}'" >> $BUILD_ROOT/.build/build.data
     echo "BUILD_ARCH='${BUILD_ARCH//"'"/$Q}'" >> $BUILD_ROOT/.build/build.data

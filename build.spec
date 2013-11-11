@@ -24,6 +24,10 @@ Version:        20131023
 Release:        1
 #!BuildIgnore:  build-mkbaselibs
 Source:         obs-build-%{version}.tar.bz2
+Patch1:         0001-Add-support-for-using-Scratchbox2-together-with-OBS-.patch
+Patch2:         0002-Make-enter_target-shell-quote-safe.patch
+Patch3:         0003-Workaround-quoting-problem-with-Harmattan.patch
+Patch4:         0004-Support-Xen-on-MeeGo-OBS-Force-an-extra-rw-for-the-X.patch
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 BuildArch:      noarch
 # Manual requires to avoid hard require to bash-static
@@ -107,6 +111,10 @@ chroot or a secure virtualized
 
 %prep
 %setup -q -n src
+%patch1 -p1
+%patch2 -p1
+%patch3 -p1
+%patch4 -p1
 
 %build
 make CFLAGS="$RPM_BUILD_FLAGS" initvm-all

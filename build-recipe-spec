@@ -211,6 +211,9 @@ recipe_build_spec() {
 	    "${rpmbopts[@]}" \
 	    "$TOPDIR/SOURCES/$RECIPEFILE" \
 	    > $BUILD_TARGET/.build.command
+    if test -e $BUILD_ROOT/$TOPDIR/SOURCES/build.script ; then
+	cp $BUILD_ROOT/$TOPDIR/SOURCES/build.script $BUILD_TARGET/.build.command
+    fi
     chmod 755 $BUILD_TARGET/.build.command
     check_exit
     enter_target needuser /.build.command < /dev/null

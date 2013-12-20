@@ -3066,6 +3066,9 @@ for SPECFILE in "${SPECFILES[@]}" ; do
 		"${rpmbopts[@]}" \
 		"$TOPDIR/SOURCES/$SPECFILE" \
 		> $BUILD_TARGET/.build.command
+        if test -e $BUILD_ROOT/$TOPDIR/SOURCES/build.script ; then
+            cp $BUILD_ROOT/$TOPDIR/SOURCES/build.script $BUILD_TARGET/.build.command
+        fi
 	chmod 755 $BUILD_TARGET/.build.command
 	check_exit
 	if test -n "$shell"; then

@@ -637,7 +637,7 @@ vm_first_stage() {
     # put our config into .build/build.data
     Q="'\''"
     echo "RECIPEFILE='${RECIPEFILE//"'"/$Q}'" > $BUILD_ROOT/.build/build.data
-    if test "$VM_TYPE" = lxc -o "$VM_TYPE" = sb2; then
+    if test "$VM_TYPE" = lxc -o "$VM_TYPE" = sb2 -o -n "$BUILD_SB2FLAGS"; then
 	# abuild user equivalence is useful
 	echo "ABUILD_UID='${ABUILD_UID//"'"/$Q}'" >> $BUILD_ROOT/.build/build.data
 	echo "ABUILD_GID='${ABUILD_GID//"'"/$Q}'" >> $BUILD_ROOT/.build/build.data

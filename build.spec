@@ -49,6 +49,10 @@ Requires:       bash
 Requires:       perl
 Requires:       binutils
 Requires:       tar
+%if 0%{?fedora}
+Requires:       perl-MD5
+Requires:       perl-TimeDate
+%endif
 Conflicts:      bsdtar < 2.5.5
 Provides:       perl(Build)
 Provides:       perl(Build::Arch)

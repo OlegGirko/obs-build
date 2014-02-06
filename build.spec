@@ -15,6 +15,7 @@
 # Please submit bugfixes or comments via http://bugs.opensuse.org/
 #
 
+%define _binaries_in_noarch_packages_terminate_build 0
 
 Name:           build
 Summary:        A Script to Build SUSE Linux RPMs
@@ -24,22 +25,6 @@ Version:        2012.05.31
 Release:        mer3
 #!BuildIgnore:  build-mkbaselibs
 Source:         obs-build-%{version}.tar.bz2
-Patch1: 0001-Add-support-for-using-Scratchbox2-together-with-OBS-.patch
-Patch2: 0002-Make-enter_target-shell-quote-safe.patch
-Patch3: 0003-build-init_buildsystem-should-copy-also-symlink-qemu.patch
-Patch4: 0004-Workaround-quoting-problem-with-Harmattan.patch
-Patch5: 0005-Support-Xen-on-MeeGo-OBS.patch
-Patch6: 0006-SPEC_REL-can-be-in-prjconf-and-must-be-substituted-a.patch
-Patch7: 0007-initial-support-for-chroot-only.patch
-Patch8: 0008-chroot-only-fixup.patch
-Patch9: 0009-Add-skip-prep-to-ask-a-suitable-rpm-to-skip-the-prep.patch
-Patch10: 0010-Only-run-the-xen-remount-in-xen-guests.patch
-Patch11: 0011-Pass-the-ABUILD_UID-GID-to-the-sb2-init.patch
-Patch12: 0012-Workaround-for-bug-https-bugs.merproject.org-show.patch
-Patch13: 0013-Move-the-rsync-overlay-actions-prior-to-any-2nd-stag.patch
-Patch14: 0014-Pass-the-RSYNCDONE-flag-to-the-2nd-stage.patch
-Patch15: 0015-Pass-the-SKIP_PREP-flag-to-the-2nd-stage.patch
-Patch16: 0016-We-rsync-to-the-BUILD_ROOT-not-the-BUILD_TARGET.patch
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 BuildArch:      noarch
 # Manual requires to avoid hard require to bash-static
@@ -111,24 +96,31 @@ for generating delta rpm packages.
 
 %endif
 
+%define initvm_arch %{_host_cpu}
+%if %{_host_cpu} == "i686"
+%define initvm_arch i586
+%endif
+%package initvm-%{initvm_arch}
+Summary:        Virtualization initializer for emulated cross architecture builds
+Group:          Development/Tools/Building
+Requires:       build
+BuildRequires:  gcc
+BuildRequires:  glibc-devel
+Provides:       build-initvm
+Obsoletes:      build-initvm
+%if 0%{?suse_version} > 1200
+BuildRequires:  glibc-devel-static
+%endif
+%if 0%{?fedora}
+BuildRequires:  glibc-static
+%endif
+
+%description initvm-%{initvm_arch}
+This package provides a script for building RPMs for SUSE Linux in a
+chroot or a secure virtualized
+
 %prep
 %setup -q -n src
-%patch1 -p1
-%patch2 -p1
-%patch3 -p1
-%patch4 -p1
-%patch5 -p1
-%patch6 -p1
-%patch7 -p1
-%patch8 -p1
-%patch9 -p1
-%patch10 -p1
-%patch11 -p1
-%patch12 -p1
-%patch13 -p1
-%patch14 -p1
-%patch15 -p1
-%patch16 -p1
 
 %build
 

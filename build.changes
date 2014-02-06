@@ -1,3 +1,22 @@
+* Thu Feb 06 2014 Oleg Girko <oleg.girko@jolla.com> - 20131023-5
+ - Add explicit provides for perl modules (needed for OBS)
+ - Explicitly require MD5 and TimeDate Perl modules in Fedora
+ - Explicitly require glibc-static for build in Fedora
+ - Add patch to fix permissions of dev files in buildsystem
+ - Explicitly allow binaries to be present in noarch initvm subpackage
+
+* Mon Jan 13 2014 Oleg Girko <oleg.girko@jolla.com> - 20131023-4
+ - Pass additional variables to sb2 build even if VM_TYPE is not sb2.
+
+* Sat Dec 28 2013 Oleg Girko <oleg.girko@jolla.com> - 20131023-3
+ - Apply more Mer patches.
+
+* Mon Nov 11 2013 Oleg Girko <oleg.girko@jolla.com> - 20131023-2
+ - Apply multiple Mer patches.
+
+* Mon Nov 11 2013 Oleg Girko <oleg.girko@jolla.com> - 20131023-1
+ - Initial package based on original 20131023 version.
+
 * Mon Sep 03 2012 David Greaves <david@dgreaves.com> -
  - Only remount xen when in a domu
  - Fixes for sb2 quickbuild (RSYNC, ABUILD_GID, SKIP_PREP)
@@ -11,3 +30,4 @@
  - Adds support for Scratchbox2
  - Fixes a quoting problem with Harmattan
  - Handles Xen remount issue on MeeGo community OBS
+

@@ -51,6 +51,13 @@ Requires:       binutils
 Requires:       perl
 Requires:       tar
 Conflicts:      bsdtar < 2.5.5
+Provides:       perl(Build)
+Provides:       perl(Build::Arch)
+Provides:       perl(Build::Deb)
+Provides:       perl(Build::Kiwi)
+Provides:       perl(Build::Rpm)
+Provides:       perl(Build::Susetags)
+Provides:       perl(Build::Zypp)
 %if 0%{?suse_version} > 1000
 # None of them are actually required for core features.
 # Perl helper scripts use them.

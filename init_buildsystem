@@ -347,6 +347,7 @@ create_devs() {
 	    ln -s $arg $BUILD_ROOT/dev/$file
 	elif test $com = mknod ; then
 	    mknod -m $mode $BUILD_ROOT/dev/$file $arg
+	    chmod $mode $BUILD_ROOT/dev/$file
 	fi
     done << DEVLIST
 	mknod null    666 c 1 3

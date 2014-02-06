@@ -15,6 +15,7 @@
 # Please submit bugfixes or comments via http://bugs.opensuse.org/
 #
 
+%define _binaries_in_noarch_packages_terminate_build 0
 
 Name:           build
 Summary:        A Script to Build SUSE Linux RPMs
@@ -41,6 +42,7 @@ Patch14:        0014-Pass-the-SKIP_PREP-flag-to-the-2nd-stage.patch
 Patch15:        0015-We-rsync-to-the-BUILD_ROOT-not-the-BUILD_TARGET.patch
 Patch16:        0016-Add-support-for-a-build.script-for-spec-rpm-builds-t.patch
 Patch17:        0017-Pass-additional-variables-to-sb2-build-even-if-VM_TY.patch
+Patch18:        0018-Fix-permissions-of-dev-files-in-buildsystem-with-chm.patch
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 BuildArch:      noarch
 # Manual requires to avoid hard require to bash-static
@@ -128,6 +130,9 @@ Obsoletes:      build-initvm
 %if 0%{?suse_version} > 1200
 BuildRequires:  glibc-devel-static
 %endif
+%if 0%{?fedora}
+BuildRequires:  glibc-static
+%endif
 
 %description initvm-%{initvm_arch}
 This package provides a script for building RPMs for SUSE Linux in a
@@ -152,6 +157,7 @@ chroot or a secure virtualized
 %patch15 -p1
 %patch16 -p1
 %patch17 -p1
+%patch18 -p1
 
 %build
 make CFLAGS="$RPM_BUILD_FLAGS" initvm-all

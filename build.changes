@@ -1,3 +1,5 @@
+* Fri May 08 2014 Oleg Girko <oleg.girko@jolla.com> - 20140430-1
+- Rebase on 20140430 snapshot.
 * Thu Feb 06 2014 Oleg Girko <oleg.girko@jolla.com> - 20131023-5
 - Add explicit provides for perl modules (needed for OBS)
 - Explicitly require MD5 and TimeDate Perl modules in Fedora

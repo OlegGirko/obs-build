@@ -21,8 +21,8 @@ Name:           build
 Summary:        A Script to Build SUSE Linux RPMs
 License:        GPL-2.0+
 Group:          Development/Tools/Building
-Version:        2012.05.31
-Release:        mer3
+Version:        2014.08.01
+Release:        mer1
 #!BuildIgnore:  build-mkbaselibs
 Source:         obs-build-%{version}.tar.bz2
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build

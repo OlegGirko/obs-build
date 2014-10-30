@@ -21,8 +21,8 @@ Name:           build
 Summary:        A Script to Build SUSE Linux RPMs
 License:        GPL-2.0+
 Group:          Development/Tools/Building
-Version:        2014.08.01
-Release:        mer1
+Version: 20140801
+Release: mer1
 #!BuildIgnore:  build-mkbaselibs
 Source:         obs-build-%{version}.tar.bz2
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
@@ -126,11 +126,6 @@ chroot or a secure virtualized
 
 %install
 make DESTDIR=$RPM_BUILD_ROOT install
-%if 0%{?sles_version} < 12
- # use sle variation with IA64 compat package generation
- install -m 0644 baselibs_global-sle.conf \
-                $RPM_BUILD_ROOT/usr/lib/build/baselibs_global.conf
-%endif
 cd $RPM_BUILD_ROOT/usr/lib/build/configs/
 %if 0%{?suse_version}
 %if 0%{?sles_version}

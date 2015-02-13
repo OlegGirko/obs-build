@@ -21,7 +21,7 @@ Name:           build
 Summary:        A Script to Build SUSE Linux RPMs
 License:        GPL-2.0+ and GPL-2.0
 Group:          Development/Tools/Building
-Version:        20140430
+Version:        20150115
 Release:        1
 #!BuildIgnore:  build-mkbaselibs
 Source:         obs-build-%{version}.tar.bz2
@@ -171,6 +171,8 @@ chmod 0644 $RPM_BUILD_ROOT/usr/lib/build/initvm.*
 
 # main
 make DESTDIR=$RPM_BUILD_ROOT install
+sed -i -e '3s/^vs /buildvc /' -e '5s/^\.B vc/.B buildvc/' "$RPM_BUILD_ROOT%{_mandir}/man1/vc.1"
+mv "$RPM_BUILD_ROOT%{_mandir}/man1/vc.1" "$RPM_BUILD_ROOT%{_mandir}/man1/buildvc.1"
 cd $RPM_BUILD_ROOT/usr/lib/build/configs/
 %if 0%{?suse_version}
 %if 0%{?sles_version}
@@ -190,7 +192,7 @@ test -e default.conf
 /usr/bin/unrpm
 /usr/lib/build
 %config(noreplace) /usr/lib/build/emulator/emulator.sh
-%{_mandir}/man1/build.1*
+%{_mandir}/man1/*.1*
 %exclude /usr/lib/build/initvm.*
 
 %if 0%{?suse_version} > 1120 || ! 0%{?suse_version}

@@ -1,3 +1,5 @@
+* Thu Mar 05 2015 Oleg Girko <oleg.girko@jolla.com> - 20150115-2
+- Add patch to fix support for building inside LXC containers.
 * Fri Feb 13 2015 Oleg Girko <oleg.girko@jolla.com> - 20150115-1
 - Rebase on 20150115 snapshot.
 - Fix buildvc man page

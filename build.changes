@@ -1,3 +1,6 @@
+* Tue Mar 17 2015 Oleg Girko <oleg.girko@jolla.com> - 20150317-1
+- Rebase on 20150317 snapshot.
+- Add patch to support for building inside Docker containers.
 * Thu Mar 05 2015 Oleg Girko <oleg.girko@jolla.com> - 20150115-2
 - Add patch to fix support for building inside LXC containers.
 * Fri Feb 13 2015 Oleg Girko <oleg.girko@jolla.com> - 20150115-1

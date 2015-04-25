@@ -21,11 +21,11 @@ Name:           build
 Summary:        A Script to Build SUSE Linux RPMs
 License:        GPL-2.0+ and GPL-2.0
 Group:          Development/Tools/Building
-Version:        20150320
+Version:        20150424
 Release:        1
 #!BuildIgnore:  build-mkbaselibs
 Source:         obs-build-%{version}.tar.bz2
-Patch1:         0001-Add-initial-support-for-building-inside-Docker-conta.patch
+Patch1:         0001-Fix-logging-for-building-with-lxc-and-docker.patch
 Patch2:         0002-Add-support-for-using-Scratchbox2-together-with-OBS-.patch
 Patch3:         0003-Make-enter_target-shell-quote-safe.patch
 Patch4:         0004-Workaround-quoting-problem-with-Harmattan.patch

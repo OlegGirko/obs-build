@@ -1,3 +1,6 @@
+* Sat Apr 25 2015 Oleg Girko <oleg.girko@jolla.com> - 20150424-1
+- Rebase on 20150424 snapshot.
+- Add patch to fix logging for building with lxc and docker.
 * Wed Mar 25 2015 Oleg Girko <oleg.girko@jolla.com> - 20150320-1
 - Rebase on 20150320 snapshot.
 * Wed Mar 18 2015 Oleg Girko <oleg.girko@jolla.com> - 20150318-1

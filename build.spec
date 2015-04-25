@@ -44,6 +44,7 @@ Patch16:        0016-We-rsync-to-the-BUILD_ROOT-not-the-BUILD_TARGET.patch
 Patch17:        0017-Add-support-for-a-build.script-for-spec-rpm-builds-t.patch
 Patch18:        0018-Pass-additional-variables-to-sb2-build-even-if-VM_TY.patch
 Patch19:        0019-Fix-permissions-of-dev-files-in-buildsystem-with-chm.patch
+Patch20:        0020-Install-runservices-script-with-make-install.patch
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 BuildArch:      noarch
 # Manual requires to avoid hard require to bash-static
@@ -160,6 +161,7 @@ chroot or a secure virtualized
 %patch17 -p1
 %patch18 -p1
 %patch19 -p1
+%patch20 -p1
 
 %build
 make CFLAGS="$RPM_BUILD_FLAGS" initvm-all

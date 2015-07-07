@@ -21,30 +21,28 @@ Name:           build
 Summary:        A Script to Build SUSE Linux RPMs
 License:        GPL-2.0+ and GPL-2.0
 Group:          Development/Tools/Building
-Version:        20150424
+Version:        20150626
 Release:        1
 #!BuildIgnore:  build-mkbaselibs
 Source:         obs-build-%{version}.tar.bz2
-Patch1:         0001-Fix-logging-for-building-with-lxc-and-docker.patch
-Patch2:         0002-Add-support-for-using-Scratchbox2-together-with-OBS-.patch
-Patch3:         0003-Make-enter_target-shell-quote-safe.patch
-Patch4:         0004-Workaround-quoting-problem-with-Harmattan.patch
-Patch5:         0005-Support-Xen-on-MeeGo-OBS.patch
-Patch6:         0006-SPEC_REL-can-be-in-prjconf-and-must-be-substituted-a.patch
-Patch7:         0007-initial-support-for-chroot-only.patch
-Patch8:         0008-chroot-only-fixup.patch
-Patch9:         0009-Add-skip-prep-to-ask-a-suitable-rpm-to-skip-the-prep.patch
-Patch10:        0010-Only-run-the-xen-remount-in-xen-guests.patch
-Patch11:        0011-Pass-the-ABUILD_UID-GID-to-the-sb2-init.patch
-Patch12:        0012-Workaround-for-bug-https-bugs.merproject.org-show_bu.patch
-Patch13:        0013-Move-the-rsync-overlay-actions-prior-to-any-2nd-stag.patch
-Patch14:        0014-Pass-the-RSYNCDONE-flag-to-the-2nd-stage.patch
-Patch15:        0015-Pass-the-SKIP_PREP-flag-to-the-2nd-stage.patch
-Patch16:        0016-We-rsync-to-the-BUILD_ROOT-not-the-BUILD_TARGET.patch
-Patch17:        0017-Add-support-for-a-build.script-for-spec-rpm-builds-t.patch
-Patch18:        0018-Pass-additional-variables-to-sb2-build-even-if-VM_TY.patch
-Patch19:        0019-Fix-permissions-of-dev-files-in-buildsystem-with-chm.patch
-Patch20:        0020-Install-runservices-script-with-make-install.patch
+Patch1:         0001-Add-support-for-using-Scratchbox2-together-with-OBS-.patch
+Patch2:         0002-Make-enter_target-shell-quote-safe.patch
+Patch3:         0003-Workaround-quoting-problem-with-Harmattan.patch
+Patch4:         0004-Support-Xen-on-MeeGo-OBS.patch
+Patch5:         0005-SPEC_REL-can-be-in-prjconf-and-must-be-substituted-a.patch
+Patch6:         0006-initial-support-for-chroot-only.patch
+Patch7:         0007-chroot-only-fixup.patch
+Patch8:         0008-Add-skip-prep-to-ask-a-suitable-rpm-to-skip-the-prep.patch
+Patch9:         0009-Only-run-the-xen-remount-in-xen-guests.patch
+Patch10:        0010-Pass-the-ABUILD_UID-GID-to-the-sb2-init.patch
+Patch11:        0011-Workaround-for-bug-https-bugs.merproject.org-show_bu.patch
+Patch12:        0012-Move-the-rsync-overlay-actions-prior-to-any-2nd-stag.patch
+Patch13:        0013-Pass-the-RSYNCDONE-flag-to-the-2nd-stage.patch
+Patch14:        0014-Pass-the-SKIP_PREP-flag-to-the-2nd-stage.patch
+Patch15:        0015-We-rsync-to-the-BUILD_ROOT-not-the-BUILD_TARGET.patch
+Patch16:        0016-Add-support-for-a-build.script-for-spec-rpm-builds-t.patch
+Patch17:        0017-Pass-additional-variables-to-sb2-build-even-if-VM_TY.patch
+Patch18:        0018-Fix-permissions-of-dev-files-in-buildsystem-with-chm.patch
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 BuildArch:      noarch
 # Manual requires to avoid hard require to bash-static
@@ -160,8 +158,6 @@ chroot or a secure virtualized
 %patch16 -p1
 %patch17 -p1
 %patch18 -p1
-%patch19 -p1
-%patch20 -p1
 
 %build
 make CFLAGS="$RPM_BUILD_FLAGS" initvm-all

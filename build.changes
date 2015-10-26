@@ -1,3 +1,6 @@
+* Sun Oct 25 2015 Oleg Girko <ol@infoserver.lv> - 20151022-1
+- Rebase on 20151022 snapshot.
+- Add patch to support lxc 1.1.
 * Tue Jul 07 2015 Oleg Girko <oleg.girko@jolla.com> - 20150626-1
 - Rebase on 20150626 snapshot.
 * Sat Apr 25 2015 Oleg Girko <oleg.girko@jolla.com> - 20150424-1

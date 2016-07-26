@@ -59,9 +59,17 @@ Requires:       perl-TimeDate
 Conflicts:      bsdtar < 2.5.5
 Provides:       perl(Build)
 Provides:       perl(Build::Arch)
+Provides:       perl(Build::Archrepo)
+Provides:       perl(Build::Collax)
 Provides:       perl(Build::Deb)
+Provides:       perl(Build::Debrepo)
 Provides:       perl(Build::Kiwi)
+Provides:       perl(Build::LiveBuild)
+Provides:       perl(Build::Mdkrepo)
+Provides:       perl(Build::Repo)
 Provides:       perl(Build::Rpm)
+Provides:       perl(Build::Rpmmd)
+Provides:       perl(Build::SimpleXML)
 Provides:       perl(Build::Susetags)
 Provides:       perl(Build::Zypp)
 %if 0%{?suse_version} > 1000

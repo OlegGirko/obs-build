@@ -690,18 +690,6 @@ else
 	ln -s "$SRC" "$BUILD_TARGET/.init_b_cache/rpms/$PKG.${SRCSUF##*.}"
     done < $RPMLIST
 
-    # SB2 installs aren't part of the natural order, filter them out
-    if test -n "$PACKAGES_TO_SB2INSTALL" ; then
-	for SB2PKG in $PACKAGES_TO_SB2INSTALL ; do
-	    for PKG in $PACKAGES_TO_INSTALL ; do
-		if [ "x$PKG" != "x$SB2PKG" ]; then
-		    NEWPACKAGES_TO_INSTALL="$NEWPACKAGES_TO_INSTALL $PKG"
-		fi
-	    done
-	    PACKAGES_TO_INSTALL="$NEWPACKAGES_TO_INSTALL"
-	done
-    fi
-
     PACKAGES_TO_ALL="$PACKAGES_TO_INSTALL"
     PACKAGES_TO_AVAILABLE="$PACKAGES_TO_INSTALL"
 
@@ -712,6 +700,15 @@ else
 	for PKG in $PACKAGES_TO_ALL ; do
 	    test "$settest" = "${settest/ $PKG /}" && PACKAGES_TO_INSTALL="$PACKAGES_TO_INSTALL $PKG"
 	done
+    fi
+    # SB2 installs aren't part of the natural order, filter them out
+    if test -n "$PACKAGES_TO_SB2INSTALL" ; then
+        settest=" $PACKAGES_TO_SB2INSTALL "
+	NEWPACKAGES_TO_INSTALL=
+	for PKG in $PACKAGES_TO_INSTALL ; do
+	    test "$settest" = "${settest/ $PKG /}" && NEWPACKAGES_TO_INSTALL="$NEWPACKAGES_TO_INSTALL $PKG"
+	done
+	PACKAGES_TO_INSTALL="$NEWPACKAGES_TO_INSTALL"
     fi
     # subtract installonly packages from PACKAGES_TO_AVAILABLE
     if test -n "$PACKAGES_TO_INSTALLONLY" ; then

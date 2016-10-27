@@ -1,3 +1,5 @@
+* Thu Oct 27 2016 Oleg Girko <ol@infoserver.lv> - 20160826-2
+- Add patch to fix filtering out sb2install packages from package list.
 * Mon Aug 29 2016 Oleg Girko <ol@infoserver.lv> - 20160826-1
 - Rebase on 20160826 snapshot.
 * Tue Jul 26 2016 Oleg Girko <ol@infoserver.lv> - 20160628-2

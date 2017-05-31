@@ -53,6 +53,7 @@ Requires:       bash
 Requires:       binutils
 Requires:       perl
 Requires:       tar
+Requires:       bsdtar
 %if 0%{?fedora}
 Requires:       perl-MD5
 Requires:       perl-TimeDate

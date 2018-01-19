@@ -59,6 +59,7 @@ Requires:       perl-MD5
 Requires:       perl-TimeDate
 %endif
 Conflicts:      bsdtar < 2.5.5
+Provides:       obs-build = %{version}-%{release}
 Provides:       perl(Build)
 Provides:       perl(Build::Arch)
 Provides:       perl(Build::Archrepo)

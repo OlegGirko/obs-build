@@ -1,3 +1,5 @@
+* Thu Jan 18 2018 Oleg Girko <ol@infoserver.lv> - 20170516-2
+- Provide obs-build for compatibility with other Fedora packages.
 * Wed May 31 2017 Oleg Girko <ol@infoserver.lv> - 20170516-2
 - Require bsdtar
 * Mon May 29 2017 Oleg Girko <ol@infoserver.lv> - 20170516-1

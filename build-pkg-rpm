@@ -9,7 +9,7 @@
 RPMIDFMT="%{NAME}-%{VERSION}-%{RELEASE} %{BUILDTIME}\n"
 
 pkg_initdb_rpm() {
-    echo "initializing rpm db..."
+    echo "initializing rpm db properly..."
     mkdir -p $BUILD_TARGET/var/lib/rpm
     # rpm v5 does not have initdb
     if ! test -e $BUILD_TARGET/usr/lib/rpm/cpuinfo.yaml ; then
@@ -180,10 +180,15 @@ pkg_preinstall_rpm() {
     fi
     # hack for rpm erasures
     if test -d "$BUILD_ROOT/installed-pkg" ; then
-	# call for rpm-4.x and not rpm-devel
-        test -z "${PKG##rpm-[0-9]*}" && enter_target needroot rpm --rebuilddb
-        # also exec for exchanged rpm !  naming is rpm-x86-<target>-<ver>
-        test -z "${PKG##rpm-x86-*[0-9]*}" && enter_target needroot rpm --rebuilddb
+	if test -x $BUILD_TARGET/usr/bin/rpmdb ; then
+            test -z "${PKG##rpm-[0-9]*}" && enter_target needroot rpmdb --rebuilddb
+            test -z "${PKG##rpm-x86-*[0-9]*}" && enter_target needroot rpmdb --rebuilddb
+	else 
+	    # call for rpm-4.x and not rpm-devel
+            test -z "${PKG##rpm-[0-9]*}" && enter_target needroot rpm --rebuilddb
+            # also exec for exchanged rpm !  naming is rpm-x86-<target>-<ver>
+            test -z "${PKG##rpm-x86-*[0-9]*}" && enter_target needroot rpm --rebuilddb
+	fi
     fi
 }
 

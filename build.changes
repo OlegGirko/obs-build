@@ -1,3 +1,5 @@
+* Thu May 03 2018 Oleg Girko <ol@infoserver.lv> - 20180212-2
+- Add patch to fix rich dependency calculation.
 * Sun Feb 18 2018 Oleg Girko <ol@infoserver.lv> - 20180212-1
 - Rebase on 20180212 snapshot.
 * Thu Jan 18 2018 Oleg Girko <ol@infoserver.lv> - 20170516-2

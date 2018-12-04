@@ -1,3 +1,6 @@
+* Tue Dec 04 2018 Oleg Girko <ol@infoserver.lv> - 20181203-1
+- Rebase on 20181203 snapshot.
+- Add patches to support lxc version 3
 * Thu May 03 2018 Oleg Girko <ol@infoserver.lv> - 20180212-2
 - Add patch to fix rich dependency calculation.
 * Sun Feb 18 2018 Oleg Girko <ol@infoserver.lv> - 20180212-1

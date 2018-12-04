@@ -21,7 +21,7 @@ Name:           build
 Summary:        A Script to Build SUSE Linux RPMs
 License:        GPL-2.0+ and GPL-2.0
 Group:          Development/Tools/Building
-Version:        20180212
+Version:        20181203
 Release:        1
 #!BuildIgnore:  build-mkbaselibs
 Source:         obs-build-%{version}.tar.bz2
@@ -44,7 +44,8 @@ Patch16:        0016-Add-support-for-a-build.script-for-spec-rpm-builds-t.patch
 Patch17:        0017-Pass-additional-variables-to-sb2-build-even-if-VM_TY.patch
 Patch18:        0018-Fix-permissions-of-dev-files-in-buildsystem-with-chm.patch
 Patch19:        0019-Fix-filtering-out-sb2install-packages-from-package-l.patch
-Patch20:        0020-Fix-rich-dependency-calculation-when-dependency-name.patch
+Patch20:        0020-Show-error-message-if-lxc-has-unsupported-version.patch
+Patch21:        0021-Add-support-for-lxc-version-3.patch
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 BuildArch:      noarch
 # Manual requires to avoid hard require to bash-static
@@ -172,6 +173,7 @@ chroot or a secure virtualized
 %patch18 -p1
 %patch19 -p1
 %patch20 -p1
+%patch21 -p1
 
 %build
 make CFLAGS="$RPM_BUILD_FLAGS" initvm-all

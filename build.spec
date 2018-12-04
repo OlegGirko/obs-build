@@ -46,6 +46,7 @@ Patch18:        0018-Fix-permissions-of-dev-files-in-buildsystem-with-chm.patch
 Patch19:        0019-Fix-filtering-out-sb2install-packages-from-package-l.patch
 Patch20:        0020-Show-error-message-if-lxc-has-unsupported-version.patch
 Patch21:        0021-Add-support-for-lxc-version-3.patch
+Patch22:        0022-Return-correct-exit-code-from-lxc-build.patch
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 BuildArch:      noarch
 # Manual requires to avoid hard require to bash-static
@@ -174,6 +175,7 @@ chroot or a secure virtualized
 %patch19 -p1
 %patch20 -p1
 %patch21 -p1
+%patch22 -p1
 
 %build
 make CFLAGS="$RPM_BUILD_FLAGS" initvm-all

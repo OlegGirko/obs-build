@@ -21,7 +21,7 @@ Name:           build
 Summary:        A Script to Build SUSE Linux RPMs
 License:        GPL-2.0+ and GPL-2.0
 Group:          Development/Tools/Building
-Version:        20181203
+Version:        20190321
 Release:        1
 #!BuildIgnore:  build-mkbaselibs
 Source:         obs-build-%{version}.tar.bz2
@@ -44,9 +44,6 @@ Patch16:        0016-Add-support-for-a-build.script-for-spec-rpm-builds-t.patch
 Patch17:        0017-Pass-additional-variables-to-sb2-build-even-if-VM_TY.patch
 Patch18:        0018-Fix-permissions-of-dev-files-in-buildsystem-with-chm.patch
 Patch19:        0019-Fix-filtering-out-sb2install-packages-from-package-l.patch
-Patch20:        0020-Show-error-message-if-lxc-has-unsupported-version.patch
-Patch21:        0021-Add-support-for-lxc-version-3.patch
-Patch22:        0022-Return-correct-exit-code-from-lxc-build.patch
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 BuildArch:      noarch
 # Manual requires to avoid hard require to bash-static
@@ -173,9 +170,9 @@ chroot or a secure virtualized
 %patch17 -p1
 %patch18 -p1
 %patch19 -p1
-%patch20 -p1
-%patch21 -p1
-%patch22 -p1
+
+# Explicitly specify Python version
+sed -e '1s/^\(#!.*python\)$/\12/' -i openstack-console
 
 %build
 make CFLAGS="$RPM_BUILD_FLAGS" initvm-all
@@ -189,8 +186,6 @@ chmod 0644 $RPM_BUILD_ROOT/usr/lib/build/initvm.*
 
 # main
 make DESTDIR=$RPM_BUILD_ROOT install
-sed -i -e '3s/^vs /buildvc /' -e '5s/^\.B vc/.B buildvc/' "$RPM_BUILD_ROOT%{_mandir}/man1/vc.1"
-mv "$RPM_BUILD_ROOT%{_mandir}/man1/vc.1" "$RPM_BUILD_ROOT%{_mandir}/man1/buildvc.1"
 cd $RPM_BUILD_ROOT/usr/lib/build/configs/
 %if 0%{?suse_version}
 %if 0%{?sles_version}

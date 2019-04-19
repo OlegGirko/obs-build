@@ -1,3 +1,6 @@
+* Fri Apr 19 2019 Oleg Girko <ol@infoserver.lv> - 20190321-1
+- Rebase on 20190321 snapshot.
+- Explicitly specify Python version in openstack-console script.
 * Tue Dec 04 2018 Oleg Girko <ol@infoserver.lv> - 20181203-2
 - Add patch to return correct exit code from lxc build.
 * Tue Dec 04 2018 Oleg Girko <ol@infoserver.lv> - 20181203-1

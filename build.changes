@@ -1,3 +1,6 @@
+* Tue Nov 12 2019 Oleg Girko <ol@infoserver.lv> - 20191029-1
+- Rebase on 20191029 snapshot.
+- Add patch to support nspawn.
 * Fri Apr 19 2019 Oleg Girko <ol@infoserver.lv> - 20190321-1
 - Rebase on 20190321 snapshot.
 - Explicitly specify Python version in openstack-console script.

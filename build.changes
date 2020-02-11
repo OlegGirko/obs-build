@@ -1,3 +1,5 @@
+* Tue Feb 11 2020 Oleg Girko <ol@infoserver.lv> - 20200210-1
+- Rebase on 20200210 snapshot.
 * Fri Apr 19 2019 Oleg Girko <ol@infoserver.lv> - 20190321-1
 - Rebase on 20190321 snapshot.
 - Explicitly specify Python version in openstack-console script.

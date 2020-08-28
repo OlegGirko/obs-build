@@ -16,6 +16,7 @@
 #
 
 %define _binaries_in_noarch_packages_terminate_build 0
+%define __brp_mangle_shebangs %{nil}
 
 Name:           build
 Summary:        A Script to Build SUSE Linux RPMs

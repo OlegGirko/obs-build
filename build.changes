@@ -1,5 +1,6 @@
 * Fri Aug 28 2020 Oleg Girko <ol@infoserver.lv> - 20200828-1
 - Rebase on 20200828 snapshot.
+- Disable shebangs mangling.
 * Mon May 25 2020 Oleg Girko <ol@infoserver.lv> - 20200520-1
 - Rebase on 20200520 snapshot.
 * Fri Mar 13 2020 Oleg Girko <ol@infoserver.lv> - 20200313-1

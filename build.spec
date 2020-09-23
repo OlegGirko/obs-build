@@ -128,7 +128,7 @@ for generating delta rpm packages.
 %endif
 
 %define initvm_arch %{_host_cpu}
-%if %{_host_cpu} == "i686"
+%if "%{_host_cpu}" == "i686"
 %define initvm_arch i586
 %endif
 %package initvm-%{initvm_arch}

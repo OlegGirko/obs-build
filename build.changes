@@ -1,3 +1,5 @@
+* Wed Sep 23 2020 Oleg Girko <ol@infoserver.lv> - 20200828-2
+- Remove bare words from conditions.
 * Fri Aug 28 2020 Oleg Girko <ol@infoserver.lv> - 20200828-1
 - Rebase on 20200828 snapshot.
 - Disable shebangs mangling.

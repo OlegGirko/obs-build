@@ -22,7 +22,7 @@ Name:           build
 Summary:        A Script to Build SUSE Linux RPMs
 License:        GPL-2.0+ and GPL-2.0
 Group:          Development/Tools/Building
-Version:        20200828
+Version:        20220307
 Release:        1
 #!BuildIgnore:  build-mkbaselibs
 Source:         obs-build-%{version}.tar.bz2
@@ -200,9 +200,10 @@ test -e default.conf
 
 %files
 %defattr(-,root,root)
-%doc README
+%doc README.md
 /usr/bin/build
 /usr/bin/buildvc
+/usr/bin/pbuild
 /usr/bin/unrpm
 /usr/lib/build
 %config(noreplace) /usr/lib/build/emulator/emulator.sh

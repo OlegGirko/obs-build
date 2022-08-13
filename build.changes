@@ -1,3 +1,6 @@
+* Sat Aug 13 2022 Oleg Girko <ol@infoserver.lv> - 20220620-2
+- Build initvm.* subpackage only for Suse and Fedora
+- Partially sync spec file with upstream
 * Wed Aug 03 2022 Oleg Girko <ol@infoserver.lv> - 20220620-1
 - Rebase on 20220620 snapshot.
 * Wed Mar 23 2022 Oleg Girko <ol@infoserver.lv> - 20220315-1

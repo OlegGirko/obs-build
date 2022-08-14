@@ -80,6 +80,9 @@ Requires:       perl-MD5
 Requires:       perl-TimeDate
 BuildRequires:  perl-TimeDate
 %endif
+%if 0%{?fedora} || 0%{?rhel} || 0%{?centos}
+BuildRequires:  perl-generators
+%endif
 Conflicts:      bsdtar < 2.5.5
 %if 0%{?suse_version}
 Conflicts:      qemu < 2.5.0

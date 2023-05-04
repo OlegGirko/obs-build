@@ -32,7 +32,7 @@ Name:           %{__pkg_name}
 Summary:        A Script to Build SUSE Linux RPMs
 License:        GPL-2.0-only OR GPL-3.0-only
 Group:          Development/Tools/Building
-Version:        20220927
+Version:        20230502
 Release:        0
 Source:         obs-build-%{version}.tar.bz2
 Patch1:         0001-Add-support-for-using-Scratchbox2-together-with-OBS-.patch
@@ -54,7 +54,6 @@ Patch16:        0016-Add-support-for-a-build.script-for-spec-rpm-builds-t.patch
 Patch17:        0017-Pass-additional-variables-to-sb2-build-even-if-VM_TY.patch
 Patch18:        0018-Fix-permissions-of-dev-files-in-buildsystem-with-chm.patch
 Patch19:        0019-Fix-filtering-out-sb2install-packages-from-package-l.patch
-Patch20:        0020-Fix-permissions-of-dev-pts-ptmx-to-make-virtual-term.patch
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 BuildArch:      noarch
 #!BuildIgnore:  build-mkbaselibs build-mkbaselibs-sle
@@ -199,7 +198,6 @@ chroot or a secure virtualized
 %patch17 -p1
 %patch18 -p1
 %patch19 -p1
-%patch20 -p1
 
 %build
 %if %{with initvm}

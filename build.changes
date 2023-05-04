@@ -1,3 +1,5 @@
+* Thu May 04 2023 Oleg Girko <ol@infoserver.lv> - 20230502-1
+- Rebase on 20230502 snapshot.
 * Wed Sep 28 2022 Oleg Girko <ol@infoserver.lv> - 20220927-1
 - Rebase on 20220927 snapshot.
 - Add patch to fix permissions of ptmx device in devpts filesystem.

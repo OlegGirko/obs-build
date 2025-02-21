@@ -1,3 +1,5 @@
+* Fri Feb 21 2025 Oleg Girko <ol@infoserver.lv> - 20250206-1
+- Rebase on 20250206 snapshot.
 * Sat Oct 19 2024 Oleg Girko <ol@infoserver.lv> - 20230502-2
 - Use %autosetup instead of manually applying every patch.
 * Thu May 04 2023 Oleg Girko <ol@infoserver.lv> - 20230502-1

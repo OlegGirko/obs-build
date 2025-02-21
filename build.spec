@@ -32,7 +32,7 @@ Name:           %{__pkg_name}
 Summary:        A Script to Build SUSE Linux RPMs
 License:        GPL-2.0-only OR GPL-3.0-only
 Group:          Development/Tools/Building
-Version:        20230502
+Version:        20250206
 Release:        0
 Source:         obs-build-%{version}.tar.bz2
 Patch1:         0001-Add-support-for-using-Scratchbox2-together-with-OBS-.patch
